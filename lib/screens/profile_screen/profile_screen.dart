@@ -80,12 +80,14 @@ class ProfileScreen extends StatelessWidget {
 
                     const SizedBox(height: 5),
 
-                     Text(
-                      "Class ${controller.student.value.className??""}",
-                      style: TextStyle(
-                        color: Colors.white70,
-                      ),
-                    ),
+                     Obx(
+                       ()=> Text(
+                        "Class ${controller.student.value.className??""}",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                        ),
+                                           ),
+                     ),
                   ],
                 ),
               ),

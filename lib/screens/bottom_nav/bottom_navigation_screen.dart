@@ -2,15 +2,16 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../constants/app_colors.dart';
-import '../controller/bottom_anvigation_controller.dart';
+import '../../constants/app_colors.dart';
+import '../../controller/bottom_navigation_controller.dart';
 
 class BottomNavigationScreen extends GetView<BottomNavController> {
   const BottomNavigationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Scaffold(
+    return Obx(
+      () => Scaffold(
         body: IndexedStack(
           index: controller.currentIndex.value,
           children: controller.pages,
@@ -18,10 +19,9 @@ class BottomNavigationScreen extends GetView<BottomNavController> {
         bottomNavigationBar: CurvedNavigationBar(
           index: controller.currentIndex.value,
           backgroundColor: Colors.transparent,
-          color:AppColors.primary,
+          color: AppColors.primary,
           buttonBackgroundColor: AppColors.primaryLight,
           height: 60,
-
           items: const [
             Icon(
               Icons.home_rounded,
@@ -40,7 +40,6 @@ class BottomNavigationScreen extends GetView<BottomNavController> {
               color: Colors.white,
             ),
           ],
-
           onTap: controller.changeTab,
         ),
       ),

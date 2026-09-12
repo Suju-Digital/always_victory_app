@@ -1,5 +1,5 @@
 name: always_victory
-description: "A new Flutter project."
+description: "Always Victory Flutter Application"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.10.8
@@ -28,69 +28,93 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # Flutter SDK Dependency
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # Icons
+  # Cupertino Icons for iOS-style UI icons
   cupertino_icons: ^1.0.8
 
   # State Management & Navigation
+  # GetX for state management, dependency injection, and reactive routing
   get: ^4.6.6
 
-  # Network
+  # Networking
+  # HTTP client for API requests and remote server communication
   http: ^1.2.1
 
-  # Local Storage
+  # Local Storage & Persistence
+  # Key-value persistent storage across platforms
   shared_preferences: ^2.3.2
+  # Fast, lightweight in-memory and disk key-value storage engine
   get_storage: ^2.1.1
 
-  # UI
+  # UI & Design Components
+  # Access to Google Fonts library
   google_fonts: ^6.2.1
+  # Interactive charts and graphs rendering
   fl_chart: ^0.69.0
+  # Lottie vector animation renderer
   lottie: ^3.1.2
+  # Display network images with caching and placeholder support
   cached_network_image: ^3.3.1
+  # Shimmer loading skeleton effect animation
   shimmer: ^3.0.0
 
-  # Utils
+  # Utilities & Helpers
+  # Internationalization, date, and number formatting
   intl: ^0.19.0
+  # Unique identifier (UUID) generator
   uuid: ^4.4.2
 
-  # Bottom Navigation Bar
+  # Navigation & Layout
+  # Animated curved bottom navigation bar widget
   curved_navigation_bar: ^1.0.6
-
-  # Color Palate
-  palette_generator_master: ^1.1.0
-  carousel_slider: ^5.1.2
-
-  # Payment
-  razorpay_flutter: ^1.4.5
-
-
-  # PDF Manager
-  syncfusion_flutter_pdfviewer: ^28.2.12
-
-  # video_player
-  video_player: ^2.11.1
-  webview_flutter: ^4.14.1
-  url_launcher: ^6.3.2
-
-  # Image Manage
-  file_picker: ^11.0.2
-  image_picker: ^1.2.3
-  path: ^1.9.1
-
-  share_plus: ^12.0.2
-
-  flutter_tts: ^3.8.5
-
-  flutter_launcher_icons: ^0.14.4
-
+  # Scrollable list supporting jump/scroll to specific item index
   scrollable_positioned_list: ^0.3.8
 
+  # Media & Graphics
+  # Palette generator to extract prominent colors from images
+  palette_generator_master: ^1.1.0
+  # Image and widget carousel slider
+  carousel_slider: ^5.1.2
 
+  # Payment Gateway
+  # Razorpay payment integration SDK
+  razorpay_flutter: ^1.4.5
 
+  # Document & PDF Viewing
+  # Syncfusion PDF viewer for rendering PDF files inside the app
+  syncfusion_flutter_pdfviewer: ^28.2.12
 
+  # Video & Web Content
+  # Native video player widget for playing online and local videos
+  video_player: ^2.11.1
+  # Embedded webview controller for rendering web pages
+  webview_flutter: ^4.14.1
+  # Launch URLs, phone calls, SMS, and email links in external apps
+  url_launcher: ^6.3.2
+
+  # File & Image Pickers
+  # Native file selection dialog for choosing system files
+  file_picker: ^11.0.2
+  # Pick photos and videos from camera or photo library
+  image_picker: ^1.2.3
+  # Cross-platform path manipulation functions
+  path: ^1.9.1
+
+  # Sharing & Accessibility
+  # Cross-platform sharing of text, links, and files
+  share_plus: ^12.0.2
+  # Text-To-Speech (TTS) engine integration
+  flutter_tts: ^3.8.5
+
+  # Launcher Icons Generation
+  # Package for automatically generating launcher app icons for Android & iOS
+  flutter_launcher_icons: ^0.14.4
+
+# Configuration for flutter_launcher_icons tool to build Android/iOS app icons
 flutter_launcher_icons:
   android: true
   ios: true
@@ -98,60 +122,26 @@ flutter_launcher_icons:
   adaptive_icon_background: "#FF5722"
   adaptive_icon_foreground: "assets/images/logo.png"
 
-
-
 dev_dependencies:
+  # Flutter Test SDK for unit and widget testing
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
+  # Lint rules for Dart and Flutter code quality and best practices
   flutter_lints: ^6.0.0
 
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
+# Flutter-specific configuration options
 flutter:
 
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  # Includes Material Icons font for Material Design UI elements
   uses-material-design: true
 
-
-
-  # To add assets to your application, add an assets section, like this:
+  # Asset management: Register assets (images, fonts, JSONs, etc.) here
   # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  #   - assets/images/logo.png
 
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
+  # Custom Font definitions: Register custom fonts here
   # fonts:
-  #   - family: Schyler
+  #   - family: CustomFont
   #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+  #       - asset: fonts/CustomFont-Regular.ttf

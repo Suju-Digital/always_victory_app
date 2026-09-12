@@ -1,8 +1,9 @@
+import 'dart:math';
+
 import 'package:always_victory/controller/question_controller.dart';
 import 'package:always_victory/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:math';
 
 import '../../constants/app_colors.dart';
 import '../../widgets/score_card.dart';
@@ -18,7 +19,6 @@ class DemoResultScreen extends StatelessWidget {
     final int total = data["total"];
     final double percent = (score / total) * 100;
 
-    // Determine performance level
     ResultLevel resultLevel;
     String message;
     Color color;
@@ -61,27 +61,14 @@ class DemoResultScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  /// 🎉 Animated Trophy with Confetti
                   _buildTrophyAnimation(color, icon, resultLevel),
-
                   const SizedBox(height: 20),
-
-                  /// 🧠 Message with Typewriter Effect
                   _buildMessageWithAnimation(message, color, emoji),
-
                   const SizedBox(height: 10),
-
-                  /// 📊 Score Text with Fade
                   _buildScoreText(score, total),
-
                   const SizedBox(height: 30),
-
-                  /// 📦 Stats Cards with Slide Animation
                   _buildStatCards(score, total, percent, color),
-
                   const SizedBox(height: 40),
-
-                  /// 🏠 Home Button
                   _buildHomeButton(),
                 ],
               ),
@@ -97,9 +84,7 @@ class DemoResultScreen extends StatelessWidget {
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 800),
       curve: Curves.elasticOut,
-
       builder: (context, value, child) {
-        // Clamp the value to ensure it stays within valid range 0.0 - 1.0
         final clampedValue = value.clamp(0.0, 1.0);
 
         return Transform.scale(
@@ -107,21 +92,18 @@ class DemoResultScreen extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Glow effect
-            Container(
-              padding: EdgeInsets.all(10),
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: color,
-                width: 4,
-              ),
-            ),
-
+              Container(
+                padding: const EdgeInsets.all(10),
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: color,
+                    width: 4,
+                  ),
+                ),
                 child: Container(
-
                   width: 160,
                   height: 160,
                   decoration: BoxDecoration(
@@ -137,20 +119,17 @@ class DemoResultScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Main icon
               Icon(
                 icon,
                 size: 100,
                 color: color,
               ),
-              // Small floating particles (confetti effect)
               ...List.generate(8, (index) {
                 final angle = (index / 8) * 2 * pi;
                 final distance = 60 + (clampedValue * 20);
                 return Positioned(
                   left: 70 + cos(angle) * distance,
                   top: 70 + sin(angle) * distance,
-                  // Use simple Opacity with clamped value instead of AnimatedOpacity
                   child: Opacity(
                     opacity: clampedValue,
                     child: Icon(
@@ -252,7 +231,6 @@ class DemoResultScreen extends StatelessWidget {
         icon: icon,
       ),
       builder: (context, value, child) {
-        // Clamp the value to ensure it stays within valid range
         final clampedValue = value.clamp(0.0, 1.0);
         return Transform.translate(
           offset: Offset(0, 50 * (1 - clampedValue)),
@@ -264,7 +242,6 @@ class DemoResultScreen extends StatelessWidget {
       },
     );
   }
-
 
   Widget _buildHomeButton() {
     return TextButton(

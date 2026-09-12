@@ -80,7 +80,6 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
 
       return Scaffold(
         backgroundColor: const Color(0xffF5F7FB),
-
         body: CustomScrollView(
           slivers: [
             /// HEADER with Playful Design
@@ -192,7 +191,7 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                item.className ?? 'Expert Course',
+                                item.className.isNotEmpty ? item.className : 'Expert Course',
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
@@ -592,8 +591,8 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                                     color: AppColors.textDark,
                                   ),
                                 ),
-                                const Spacer(),
-                                const Text(
+                                Spacer(),
+                                Text(
                                   'Swipe ▶',
                                   style: TextStyle(
                                     color: AppColors.textGrey,
@@ -620,7 +619,7 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(
                                 demoVideos.length,
-                                    (index) => Container(
+                                (index) => Container(
                                   margin: const EdgeInsets.symmetric(horizontal: 4),
                                   width: 8,
                                   height: 8,
@@ -809,25 +808,23 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
   Future<void> _playVideo(Map<String, String> video) async {
     final url = video['url']!;
 
-    // Show options dialog
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       backgroundColor: Colors.white,
-      isScrollControlled: true, // Allow bottom sheet to be scrollable
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return SafeArea(
           child: Container(
             padding: const EdgeInsets.all(20),
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.7, // Limit height to 70% of screen
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Drag handle
                 Center(
                   child: Container(
                     width: 40,
@@ -839,8 +836,6 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Title
                 const Text(
                   '🎬 Play Video',
                   style: TextStyle(
@@ -850,8 +845,6 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Options with Flexible to prevent overflow
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
@@ -864,7 +857,7 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                         color: Colors.red.shade700,
                         onTap: () {
                           Navigator.pop(context);
-
+                          _launchYouTubeApp(url);
                         },
                       ),
                       const Divider(height: 30),
@@ -879,7 +872,6 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                         },
                       ),
                       const Divider(height: 30),
-
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
@@ -941,14 +933,12 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
 
   Future<void> _launchYouTubeApp(String url) async {
     try {
-      // Try to open in YouTube app
       final youtubeUrl = url.replaceFirst('watch?v=', 'watch?v=');
       final Uri uri = Uri.parse(youtubeUrl);
 
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        // Fallback to browser
         await _launchBrowser(url);
       }
     } catch (e) {
@@ -980,17 +970,6 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
         backgroundColor: Colors.red.shade100,
       );
     }
-  }
-
-  void _openInWebView(Map<String, String> video) {
-    Get.to(
-          () => VideoPlayerScreen(
-        videoUrl: video['embedUrl']!,
-        videoTitle: video['title']!,
-      ),
-      transition: Transition.downToUp,
-      duration: const Duration(milliseconds: 400),
-    );
   }
 
   Widget _buildFeatureTag(String emoji, String label) {
@@ -1068,7 +1047,7 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
   }
 }
 
-/// Video Player Screen with WebView (Fixed)
+/// Video Player Screen with WebView
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
   final String videoTitle;
@@ -1090,7 +1069,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize WebView with a slight delay to ensure proper setup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeWebView();
     });

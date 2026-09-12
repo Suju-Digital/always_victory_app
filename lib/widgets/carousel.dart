@@ -1,6 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class AppCarousel<T> extends StatefulWidget {
   final List<T> items;
@@ -47,8 +46,8 @@ class _AppCarouselState<T> extends State<AppCarousel<T>> {
             height: widget.height,
             autoPlay: widget.autoPlay,
             autoPlayInterval: widget.autoPlayDuration,
-            viewportFraction: 0.92, // Shows a bit of the next/prev cards
-            enlargeCenterPage: true, // Pop-out effect
+            viewportFraction: 0.92,
+            enlargeCenterPage: true,
             enlargeStrategy: CenterPageEnlargeStrategy.scale,
             onPageChanged: (index, reason) {
               setState(() {
@@ -57,8 +56,7 @@ class _AppCarouselState<T> extends State<AppCarousel<T>> {
             },
           ),
         ),
-
-        if (widget.showIndicator) 
+        if (widget.showIndicator)
           Positioned(
             bottom: 12,
             child: Row(

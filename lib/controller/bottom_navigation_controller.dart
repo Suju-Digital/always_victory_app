@@ -10,19 +10,13 @@ class BottomNavController extends GetxController {
   final currentIndex = 0.obs;
 
   final pages = [
-     HomeScreen(),
+    HomeScreen(),
     MyPurchasesScreen(),
     ProgressReportScreen(),
-     ProfileScreen(),
+    ProfileScreen(),
   ];
 
   Future<void> changeTab(int index) async {
-    // if(index == 1){
-    //  await ClassController.instance.loadEbooks();
-    //  await ClassController.instance.loadPurchasedBooks();
-    //  await ClassController.instance.getAllClassesProgress();
-    //
-    // }
     currentIndex.value = index;
   }
 }

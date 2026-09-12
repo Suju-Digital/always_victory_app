@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:always_victory/controller/class_controller.dart';
 import 'package:always_victory/controller/question_controller.dart';
@@ -9,7 +10,6 @@ import 'package:always_victory/models/student_model.dart';
 import 'package:always_victory/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
@@ -21,23 +21,23 @@ import '../models/class_model.dart';
 class AuthController extends GetxController {
   static AuthController get instance => Get.find();
 
-  // ================= STUDENT =================
+  // ================= STUDENT STATE =================
 
   Rx<StudentModel> student = StudentModel().obs;
 
-  // ================= LOGIN =================
+  // ================= LOGIN FORM CONTROLLERS =================
 
   final loginController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // ================= REGISTER =================
+  // ================= REGISTER FORM CONTROLLERS =================
 
   final nameController = TextEditingController();
   final contactController = TextEditingController();
   final emailController = TextEditingController();
   final registerPasswordController = TextEditingController();
 
-  // ================= COMMON =================
+  // ================= REACTIVE UI STATES =================
 
   final isLoading = false.obs;
   final isPasswordHidden = true.obs;
@@ -53,7 +53,7 @@ class AuthController extends GetxController {
     isRegisterPasswordHidden.value = !isRegisterPasswordHidden.value;
   }
 
-  // ================= LOGIN =================
+  // ================= OPTIMIZED LOGIN METHOD =================
 
   Future<void> login() async {
     final email = loginController.text.trim();
@@ -62,12 +62,13 @@ class AuthController extends GetxController {
     if (email.isEmpty || password.isEmpty) {
       Utils.show(
         isError: true,
-        message: "Please enter Email and Password",
+        message: "Please enter Email/Mobile and Password",
       );
       return;
     }
 
     try {
+      isLoading.value = true;
       Utils.showLoading(message: "Logging in...");
 
       final response = await ApiHelper.post(
@@ -78,8 +79,6 @@ class AuthController extends GetxController {
         },
       );
 
-
-
       AppLog.response(response);
 
       if (response['status'] == true) {
@@ -87,73 +86,70 @@ class AuthController extends GetxController {
 
         student.value = StudentModel.fromJson(json);
 
-        AppLog.info("This Student rx value");
-        AppLog.response(student.value.toJson());
+        AppLog.info("Logged in student profile loaded.");
 
+        // Fast Async Storage
         await LocalStorage.setLoggedIn(true);
         await LocalStorage.saveStudent(student.value.toJson());
-        await ClassController.instance.loadOnInit();
+
+        Utils.hide();
+        isLoading.value = false;
 
         Utils.show(
           isSuccess: true,
-          message: response['message'] ?? 'Login Successful',
+          message: response['message'] ?? 'Login Successful 🎉',
         );
-        passwordController.text = "";
-        loginController.text = "";
+
+        // Reset inputs
+        passwordController.clear();
+        loginController.clear();
+
+        // Immediate snappy navigation
         Get.offAllNamed(AppRoutes.bottomNav);
+
+        // Asynchronously initialize class controller without blocking UI transition
+        ClassController.instance.loadOnInit();
       } else {
+        Utils.hide();
+        isLoading.value = false;
         Utils.show(
           isError: true,
-          message: response['message'] ?? 'Login Failed',
+          message: response['message'] ?? 'Invalid Email or Password',
         );
       }
-      Utils.hide();
     } catch (e, s) {
       Utils.hide();
+      isLoading.value = false;
       AppLog.error('Login Error: $e');
       AppLog.error(s.toString());
       Utils.show(
         isError: true,
-        message: e.toString(),
+        message: "Network Error: Please check your connection",
       );
     }
   }
 
-  // ================= REGISTER =================
+  // ================= REGISTER METHOD =================
 
   Future<void> registerStudent() async {
-
-
     String name = nameController.text.trim();
     String contact = contactController.text.trim();
-    String studentClass = AuthController.instance.selectedClass.value?.className ?? "";
+    String studentClass =
+        AuthController.instance.selectedClass.value?.className ?? "";
     String email = emailController.text.trim();
     String password = registerPasswordController.text.trim();
 
-
-
-    if (name.isEmpty || contact.isEmpty || studentClass.isEmpty) {
+    if (name.isEmpty || contact.isEmpty || studentClass.isEmpty || password.isEmpty) {
       Utils.show(
         isError: true,
-        message: "Name, Contact and Class are required",
-      );
-      return;
-    }
-
-    print(email);
-    print(password);
-
-    if ((email.isNotEmpty && password.isEmpty) ||
-        (email.isEmpty && password.isNotEmpty)) {
-      Utils.show(
-        isError: true,
-        message: "Email and Password must be filled together",
+        message: "Please fill Name, Contact Number, Class, and Password",
       );
       return;
     }
 
     try {
-      Utils.showLoading();
+      isLoading.value = true;
+      Utils.showLoading(message: "Registering...");
 
       final studentModel = StudentModel(
         name: name,
@@ -170,43 +166,50 @@ class AuthController extends GetxController {
         password: password,
       );
       AppLog.response(response);
+
       if (response['status'] == true) {
         final stId = response['student_id'];
         await LocalStorage.setLoggedIn(true);
         studentModel.id = stId.toString();
         student.value = studentModel;
         await LocalStorage.saveStudent(student.toJson());
-        await ClassController.instance.loadOnInit();
-       await QuestionController.instance.getDemoQuestions(AuthController.instance.selectedClass.value?.id??0);
 
+        Utils.hide();
+        isLoading.value = false;
 
         Utils.show(
           isSuccess: true,
-          message: "Student Registered Successfully",
+          message: "Student Registered Successfully! 🎉",
         );
 
         clearRegisterFields();
 
         Get.back();
         Get.offAllNamed(AppRoutes.demoTest);
+
+        // Async load class & demo test
+        ClassController.instance.loadOnInit();
+        QuestionController.instance.getDemoQuestions(
+          AuthController.instance.selectedClass.value?.id ?? 0,
+        );
         QuestionController.instance.startTimer();
       } else {
+        Utils.hide();
+        isLoading.value = false;
         Utils.show(
           isError: true,
-          message: response['message'],
+          message: response['message'] ?? 'Registration failed',
         );
       }
     } catch (e) {
+      Utils.hide();
+      isLoading.value = false;
       Utils.show(
         isError: true,
-        message: e.toString(),
+        message: "Network Error: Registration failed",
       );
-    } finally {
-      Utils.hide();
     }
   }
-
-
 
   // ================= UPDATE PROFILE =================
 
@@ -219,14 +222,12 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Get student ID
       final studentId = student.value.id;
       if (studentId == null || studentId.isEmpty) {
         Utils.showError("Student ID not found. Please login again.");
         return;
       }
 
-      // Prepare data for update
       final Map<String, dynamic> data = {
         'student_id': studentId,
         'name': name,
@@ -236,19 +237,15 @@ class AuthController extends GetxController {
 
       String? uploadedImagePath;
 
-      // If image is selected, upload it first
       if (imageFile != null) {
         try {
-          // Create multipart request for image upload
           final request = http.MultipartRequest(
             'POST',
             Uri.parse('${AppConfig.baseUrl}/upload_student_photo.php'),
           );
 
-          // Add student ID
           request.fields['student_id'] = studentId;
 
-          // Add image file
           final stream = http.ByteStream(imageFile.openRead());
           final length = await imageFile.length();
           final multipartFile = http.MultipartFile(
@@ -259,7 +256,6 @@ class AuthController extends GetxController {
           );
           request.files.add(multipartFile);
 
-          // Send request
           final response = await request.send();
           final responseString = await response.stream.bytesToString();
           final imageResponse = jsonDecode(responseString);
@@ -272,7 +268,8 @@ class AuthController extends GetxController {
               data['photo'] = uploadedImagePath;
             }
           } else {
-            Utils.showError(imageResponse['message'] ?? "Failed to upload image");
+            Utils.showError(
+                imageResponse['message'] ?? "Failed to upload image");
             return;
           }
         } catch (e) {
@@ -282,7 +279,6 @@ class AuthController extends GetxController {
         }
       }
 
-      // Update profile
       final response = await ApiHelper.post(
         'update_student.php',
         body: data,
@@ -291,7 +287,6 @@ class AuthController extends GetxController {
       AppLog.response(response);
 
       if (response['status'] == true) {
-        // Update local student data
         final responseData = response['data'] as Map<String, dynamic>;
 
         final updatedStudent = StudentModel(
@@ -303,18 +298,16 @@ class AuthController extends GetxController {
           classId: responseData['class_id'] ?? student.value.classId,
           photo: responseData['photo'] ?? student.value.photo,
           status: responseData['status'] ?? student.value.status,
-          createdAt: responseData['created_at'] ?? student.value.createdAt,
+          createdAt: responseData['createdAt'] ?? student.value.createdAt,
         );
 
         student.value = updatedStudent;
         await LocalStorage.saveStudent(student.value.toJson());
 
-        // Show success only once
         Utils.showSuccess("Profile updated successfully! 🎉");
 
-        // Wait a moment before navigating back
         await Future.delayed(const Duration(milliseconds: 500));
-        Get.back(); // Go back to profile screen
+        Get.back();
       } else {
         Utils.showError(response['message'] ?? "Failed to update profile");
       }
@@ -326,7 +319,7 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================= OTHER FUNCTIONS =================
+  // ================= HELPERS =================
 
   void clearRegisterFields() {
     nameController.clear();

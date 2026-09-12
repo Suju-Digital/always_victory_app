@@ -1,5 +1,4 @@
-
-import 'package:always_victory/data/gloable_controller_binding/gloable_binding.dart';
+import 'package:always_victory/data/global_controller_binding/global_binding.dart';
 import 'package:always_victory/routes/app_pages.dart';
 import 'package:always_victory/routes/app_routes.dart';
 import 'package:always_victory/theme/app_theme.dart';
@@ -28,5 +27,3 @@ class MCQApp extends StatelessWidget {
     );
   }
 }
-
-

@@ -17,7 +17,7 @@ import '../../models/ebook_purchase_model.dart';
 import '../../models/enroll_class_model.dart';
 import '../../models/onboard_model.dart';
 import '../../models/progress_model.dart';
-import '../../models/purchease_class.dart';
+import '../../models/purchase_class_model.dart';
 import '../../models/question_model.dart';
 import '../../models/student_attempt_model.dart';
 import '../../models/student_model.dart';
@@ -25,32 +25,23 @@ import '../../models/student_model.dart';
 class ApiServices {
   ApiServices._();
 
-
-
-
   static Future<List<OnboardModel>> getOnboards() async {
-    final response = await http.get(Uri.parse( "${AppConfig.baseUrl}${AppConfig.onBoard}"));
+    final response = await http.get(Uri.parse("${AppConfig.baseUrl}${AppConfig.onBoard}"));
 
     if (response.statusCode != 200) {
       throw Exception('Failed to load onboarding data');
     }
 
     final Map<String, dynamic> json = jsonDecode(response.body);
-
     final List<dynamic> data = json['data'] ?? [];
 
-    return data
-        .map((item) => OnboardModel.fromJson(item))
-        .toList();
+    return data.map((item) => OnboardModel.fromJson(item)).toList();
   }
-
 
   static String getImageUrl(String imagePath) {
-    print( '${AppConfig.imageBaseUrl}$imagePath');
+    print('${AppConfig.imageBaseUrl}$imagePath');
     return '${AppConfig.imageBaseUrl}$imagePath';
   }
-
-
 
   static Future<Map<String, dynamic>> registerStudent({
     required StudentModel student,
@@ -79,10 +70,7 @@ class ApiServices {
 
       if (response['status'] == true) {
         final List<dynamic> data = response['data'] ?? [];
-
-        return data
-            .map((item) => ClassModel.fromJson(item))
-            .toList();
+        return data.map((item) => ClassModel.fromJson(item)).toList();
       }
 
       return [];
@@ -97,14 +85,11 @@ class ApiServices {
         AppConfig.carousel,
       );
 
-         AppLog.response(response);
+      AppLog.response(response);
 
       if (response['status'] == true) {
         final List<dynamic> data = response['data'] ?? [];
-
-        return data
-            .map((item) => CarouselModel.fromJson(item))
-            .toList();
+        return data.map((item) => CarouselModel.fromJson(item)).toList();
       }
 
       return [];
@@ -113,12 +98,11 @@ class ApiServices {
     }
   }
 
-
- static Future<ProgressModel?> getProgress({
+  static Future<ProgressModel?> getProgress({
     required int studentId,
     required int classId,
   }) async {
-    try{
+    try {
       final response = await ApiHelper.post(
         AppConfig.progress,
         body: {
@@ -128,15 +112,11 @@ class ApiServices {
       );
       AppLog.response(response);
       return ProgressModel.fromJson(response);
-    }catch(e){
+    } catch (e) {
       AppLog.error(e.toString());
     }
     return null;
-
- }
-
-
-
+  }
 
   static Future<EnrollmentModel> getEnrollmentCount({
     required int classId,
@@ -162,30 +142,24 @@ class ApiServices {
       return [];
     }
 
-    final List<dynamic> classes =
-        response['data']?['classes'] ?? [];
+    final List<dynamic> classes = response['data']?['classes'] ?? [];
 
-    return classes
-        .map((e) => ClassItem.fromJson(e))
-        .toList();
+    return classes.map((e) => ClassItem.fromJson(e)).toList();
   }
 
- static Future<List<QuestionModel>> getQuestions(String dayId,String classId) async {
+  static Future<List<QuestionModel>> getQuestions(String dayId, String classId) async {
     try {
       final response = await ApiHelper.post(
         AppConfig.getQuestion,
         body: {
           "day_id": dayId,
-          "class_id":classId
+          "class_id": classId,
         },
       );
 
       if (response['status'] == true) {
         List data = response['data'];
-
-        return data
-            .map((e) => QuestionModel.fromJson(e))
-            .toList();
+        return data.map((e) => QuestionModel.fromJson(e)).toList();
       }
 
       return [];
@@ -193,8 +167,6 @@ class ApiServices {
       throw Exception(e.toString());
     }
   }
-
-
 
   static Future<bool> submitAnswer({
     required int studentId,
@@ -205,7 +177,7 @@ class ApiServices {
   }) async {
     try {
       final response = await ApiHelper.post(
-       AppConfig.submitAnswer,
+        AppConfig.submitAnswer,
         body: {
           "student_id": studentId,
           "course_id": courseId,
@@ -220,8 +192,7 @@ class ApiServices {
       print("API Error => $e");
       return false;
     }
- }
-
+  }
 
   static Future<List<EbookModel>> getEbooks() async {
     try {
@@ -231,23 +202,19 @@ class ApiServices {
 
       if (response['status'] == true) {
         return (response['data'] as List)
-            .map(
-              (e) => EbookModel.fromJson(e),
-        )
+            .map((e) => EbookModel.fromJson(e))
             .toList();
       }
 
       return [];
     } catch (e) {
-      throw Exception(
-        "Failed to load ebooks: $e",
-      );
+      throw Exception("Failed to load ebooks: $e");
     }
   }
 
-
-  static Future<List<PurchasedBookModel>> getPurchasedBooks({required int studentId,}) async {
-
+  static Future<List<PurchasedBookModel>> getPurchasedBooks({
+    required int studentId,
+  }) async {
     final response = await ApiHelper.post(
       "get_purchase_ebook.php",
       body: {
@@ -255,18 +222,14 @@ class ApiServices {
       },
     );
 
-    if(response['status'] == true){
-
+    if (response['status'] == true) {
       return (response['data'] as List)
-          .map(
-            (e)=>PurchasedBookModel.fromJson(e),
-      )
+          .map((e) => PurchasedBookModel.fromJson(e))
           .toList();
     }
 
     return [];
   }
-
 
   static Future<void> buyEbook({
     required int ebookId,
@@ -277,8 +240,7 @@ class ApiServices {
     if (studentJson == null) {
       throw Exception("Student not found");
     }
-    final student =
-    StudentModel.fromJson(studentJson);
+    final student = StudentModel.fromJson(studentJson);
 
     await ApiHelper.post(
       "ebook_purchase.php",
@@ -296,7 +258,6 @@ class ApiServices {
     required String classId,
     required String dayId,
   }) async {
-
     final response = await ApiHelper.post(
       "student_attempts.php",
       body: {
@@ -309,19 +270,17 @@ class ApiServices {
     return StudentAttemptResponse.fromJson(response);
   }
 
-
   static Future<Map<String, dynamic>> uploadFile(
-      File file, {
-        required String endpoint,
-        required String fieldName,
-      }) async {
+    File file, {
+    required String endpoint,
+    required String fieldName,
+  }) async {
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('${AppConfig.baseUrl}/$endpoint'),
       );
 
-      // Add file
       final stream = http.ByteStream(file.openRead());
       final length = await file.length();
       final multipartFile = http.MultipartFile(
@@ -332,7 +291,6 @@ class ApiServices {
       );
       request.files.add(multipartFile);
 
-      // Send request
       final response = await request.send();
       final responseString = await response.stream.bytesToString();
 

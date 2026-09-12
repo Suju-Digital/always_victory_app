@@ -6,7 +6,7 @@ import 'package:always_victory/helpers/voice_helper.dart';
 import 'package:always_victory/models/carousel_model.dart';
 import 'package:always_victory/models/class_model.dart';
 import 'package:always_victory/models/progress_model.dart';
-import 'package:always_victory/models/purchease_class.dart';
+import 'package:always_victory/models/purchase_class_model.dart';
 import 'package:always_victory/models/review_model.dart';
 import 'package:always_victory/models/student_model.dart';
 import 'package:get/get.dart';
@@ -32,7 +32,6 @@ class ClassController extends GetxController {
 
   final reviews = <ReviewModel>[].obs;
 
-
   @override
   void onInit() {
     super.onInit();
@@ -43,11 +42,11 @@ class ClassController extends GetxController {
     print("class ,purchase , ebook loaded");
     try {
       isLoading.value = true;
-       await loadClass();
-        await  loadPurchaseClass();
-        await loadEbooks();
-        await loadPurchasedBooks();
-    await  Future.wait([
+      await loadClass();
+      await loadPurchaseClass();
+      await loadEbooks();
+      await loadPurchasedBooks();
+      await Future.wait([
         loadCarousel(),
         getAllClassesProgress(),
         loadEnrollmentCounts(),
@@ -56,14 +55,12 @@ class ClassController extends GetxController {
 
       isLoading.value = false;
 
-      // Welcome voice greeting for kids
       final name = authController.student.value.name ?? "";
       if (name.isNotEmpty) {
         Future.delayed(const Duration(seconds: 1), () {
           VoiceHelper.speak("नमस्ते $name! Always Victory में आपका स्वागत है। चलिए आज कुछ नया सीखते हैं!");
         });
       }
-
     } catch (e) {
       isLoading.value = false;
     }
@@ -109,9 +106,8 @@ class ClassController extends GetxController {
       }
 
       final json = await LocalStorage.getStudent();
-      if(json == null){
+      if (json == null) {
         print("classes null.........❌❌❌❌");
-
         return;
       }
       final student = StudentModel.fromJson(json);
@@ -131,7 +127,7 @@ class ClassController extends GetxController {
 
       final results = await Future.wait(
         classes.map(
-              (cls) => ApiServices.getProgress(
+          (cls) => ApiServices.getProgress(
             studentId: studentId,
             classId: cls.id,
           ),
@@ -142,9 +138,8 @@ class ClassController extends GetxController {
         results.whereType<ProgressModel>(),
       );
 
-      
-      questionProgress.forEach((element) => AppLog.response(element.toJson()),);
-      
+      questionProgress.forEach((element) => AppLog.response(element.toJson()));
+
       AppLog.info(
         "Progress loaded: ${questionProgress.length}",
       );
@@ -158,28 +153,26 @@ class ClassController extends GetxController {
     try {
       final results = await Future.wait(
         classes.map(
-              (cls) => ApiServices.getEnrollmentCount(
+          (cls) => ApiServices.getEnrollmentCount(
             classId: cls.id,
           ),
         ),
       );
 
       for (final item in results) {
-        enrollmentCounts[item.classId] =
-            item.totalStudents;
+        enrollmentCounts[item.classId] = item.totalStudents;
       }
     } catch (e) {
       AppLog.error(e.toString());
     }
   }
 
-   Future<bool> paymentSuccess({
+  Future<bool> paymentSuccess({
     required int studentId,
     required int classId,
     required double amount,
     required String paymentId,
   }) async {
-
     final response = await ApiHelper.post(
       "payment_success.php",
       body: {
@@ -195,28 +188,24 @@ class ClassController extends GetxController {
 
   Future<void> loadPurchaseClass() async {
     try {
-
       purchaseClass.clear();
 
       final json = await LocalStorage.getStudent();
-      if(json  == null){
+      if (json == null) {
         print("purchase null.........❌❌❌❌");
         return;
       }
-          final student = StudentModel.fromJson(json);
-      var purchasedClasses ;
-        if(student.id!=null){
-         purchasedClasses= await ApiServices.getPurchasedClasses(
-            studentId: int.parse(student.id!),
-          );
-        }else {
-          print("Student Id Null..");
-        }
+      final student = StudentModel.fromJson(json);
+      var purchasedClasses;
+      if (student.id != null) {
+        purchasedClasses = await ApiServices.getPurchasedClasses(
+          studentId: int.parse(student.id!),
+        );
+      } else {
+        print("Student Id Null..");
+      }
 
-
-
-      final purchasedIds =
-      purchasedClasses.map((e) => e.classId).toSet();
+      final purchasedIds = purchasedClasses.map((e) => e.classId).toSet();
 
       for (final cls in classes) {
         AppLog.info(
@@ -233,33 +222,29 @@ class ClassController extends GetxController {
     }
   }
 
-
   Future<void> loadEbooks() async {
     try {
       final result = await ApiServices.getEbooks();
       ebooks.assignAll(result);
-
     } catch (e) {
       print(e);
     }
   }
 
   Future<void> loadPurchasedBooks() async {
-
     purchasedBooks.clear();
-    final studentJson =  await LocalStorage.getStudent();
-    if(studentJson == null){
+    final studentJson = await LocalStorage.getStudent();
+    if (studentJson == null) {
       return AppLog.error("Student Getting Null");
     }
 
     final student = StudentModel.fromJson(studentJson);
 
-    final result =
-    await ApiServices.getPurchasedBooks(
+    final result = await ApiServices.getPurchasedBooks(
       studentId: int.parse(student.id!),
     );
 
-    for(final item in result){
+    for (final item in result) {
       purchasedBooks[item.ebookId] = true;
     }
     print("Purchased Books => $purchasedBooks");

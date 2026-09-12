@@ -4,26 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../constants/app_colors.dart';
-import '../../controller/purchase_course/ebook_purchase.dart';
+import '../../controller/ebook_purchase_controller.dart';
 import '../../routes/app_routes.dart';
 import 'ebook_reader.dart';
 
 class PurchasedBooksTab extends StatelessWidget {
   PurchasedBooksTab({super.key});
 
-  final ClassController controller =
-      ClassController.instance;
+  final ClassController controller = ClassController.instance;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-
       if (controller.ebooks.isEmpty) {
         return RefreshIndicator(
-          onRefresh:()async {
-           await controller.loadEbooks();
+          onRefresh: () async {
+            await controller.loadEbooks();
             await controller.loadPurchasedBooks();
-
           },
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -39,32 +36,26 @@ class PurchasedBooksTab extends StatelessWidget {
                         color: AppColors.primary.withOpacity(0.05),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        color: AppColors.primary,
-                        size: 80,
+                      child: const Text(
+                        '📚',
+                        style: TextStyle(fontSize: 64),
                       ),
                     ),
                     const SizedBox(height: 24),
                     const Text(
-                      "No Books Found",
+                      'No Books Available Yet',
                       style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 22,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                         color: AppColors.textDark,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Text(
-                        "Explore our library to find the perfect study material for your child!",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                          color: AppColors.textGrey.withOpacity(0.8),
-                        ),
+                    Text(
+                      'Check back soon for new study materials!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -76,92 +67,56 @@ class PurchasedBooksTab extends StatelessWidget {
       }
 
       return RefreshIndicator(
-        onRefresh: controller.loadEbooks,
+        onRefresh: () async {
+          await controller.loadEbooks();
+          await controller.loadPurchasedBooks();
+        },
         child: ListView.builder(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(16),
           itemCount: controller.ebooks.length,
           itemBuilder: (context, index) {
             final ebook = controller.ebooks[index];
-            print(
-                "ebook.id = ${ebook.id} | purchased = ${controller.purchasedBooks[ebook.id]}"
-            );
-
-            final isPurchased =
-                controller.purchasedBooks[ebook.id] ?? false;
+            final isPurchased = controller.purchasedBooks[ebook.id] ?? false;
 
             return Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// BOOK IMAGE
-                  Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: Image.network(
-                            "${AppConfig.pdfThumbnailBaseUrl}${ebook.thumbnail}",
-                            width: 100,
-                            height: 145,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 100,
-                              height: 145,
-                              color: Colors.grey.shade100,
-                              child: const Icon(Icons.broken_image, color: Colors.grey),
-                            ),
-                          ),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(16),
+                    ),
+                    child: Image.network(
+                      "${AppConfig.studentImageBaseUrl}${ebook.thumbnail}",
+                      width: 100,
+                      height: 130,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 100,
+                        height: 130,
+                        color: Colors.grey.shade200,
+                        child: const Icon(
+                          Icons.menu_book,
+                          size: 40,
+                          color: Colors.grey,
                         ),
                       ),
-
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: (isPurchased ? AppColors.correct : Colors.black).withOpacity(0.8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isPurchased ? Icons.lock_open_rounded : Icons.lock_rounded,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-
-                  const SizedBox(width: 16),
-
-                  /// DETAILS
                   Expanded(
-                    child: SizedBox(
-                      height: 145,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -170,81 +125,51 @@ class PurchasedBooksTab extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              height: 1.2,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                               color: AppColors.textDark,
                             ),
                           ),
-
-                          const SizedBox(height: 6),
-
-                          Expanded(
-                            child: Text(
-                              ebook.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: AppColors.textGrey.withOpacity(0.8),
-                                fontSize: 13,
-                                height: 1.4,
-                              ),
+                          const SizedBox(height: 4),
+                          Text(
+                            ebook.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
                             ),
                           ),
-
                           const SizedBox(height: 8),
-
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Price",
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textGrey),
-                                  ),
-                                  Text(
-                                    "₹${ebook.price}",
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.textDark,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                "₹${ebook.price}",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
                               ),
-                              SizedBox(
-                                height: 42,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isPurchased
-                                        ? AppColors.correct
-                                        : AppColors.primary,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (isPurchased) {
+                                    Get.to(() => EbookReaderScreen(ebook: ebook));
+                                  } else {
+                                    BuyEbookController.instance.selectedBook.value = ebook;
+                                    BuyEbookController.instance.startPayment();
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isPurchased ? Colors.green : AppColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  onPressed: () async {
-                                    if (isPurchased) {
-                                      Get.to(() => EbookReaderScreen(ebook: ebook));
-                                    } else {
-                                      BuyEbookController.instance.selectedBook.value = ebook;
-                                      BuyEbookController.instance.startPayment();
-                                    }
-                                  },
-                                  child: Text(
-                                    isPurchased ? "READ" : "BUY",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 12,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
+                                ),
+                                child: Text(
+                                  isPurchased ? "Read" : "Buy Now",
+                                  style: const TextStyle(color: Colors.white),
                                 ),
                               ),
                             ],
