@@ -171,6 +171,7 @@ class QuestionController extends GetxController {
   static QuestionController get instance => Get.find();
 
   var questions = <QuestionModel>[].obs;
+  var allDayQuestions = <QuestionModel>[].obs;
   final RxList<AnswerModel> answersList = <AnswerModel>[].obs;
 
   var demoQuestion = <DemoQuestionModel>[].obs;
@@ -203,6 +204,7 @@ class QuestionController extends GetxController {
     answersList.clear();
 
     final data = await ApiServices.getQuestions(dayId, classId);
+    allDayQuestions.assignAll(data);
     questions.assignAll(data);
 
     // Initialize answer storage and result list
@@ -216,8 +218,48 @@ class QuestionController extends GetxController {
       return false;
     }
 
-    startTimer();
     return true;
+  }
+
+  void startQuizForSubject(dynamic subjectFilter) {
+    if (subjectFilter == null) {
+      // All Questions
+      questions.assignAll(allDayQuestions);
+    } else if (subjectFilter is String && subjectFilter.isNotEmpty) {
+      // Filter by subject name (from PHP query s.subject_name AS subject_id)
+      final nameFiltered = allDayQuestions.where((q) {
+        final name = q.subjectName?.trim().toLowerCase() ?? '';
+        final target = subjectFilter.trim().toLowerCase();
+        return name.contains(target) || target.contains(name) || name == target;
+      }).toList();
+
+      if (nameFiltered.isNotEmpty) {
+        questions.assignAll(nameFiltered);
+      } else {
+        questions.assignAll(allDayQuestions);
+      }
+    } else if (subjectFilter is int) {
+      final idFiltered =
+          allDayQuestions.where((q) => q.subjectId == subjectFilter).toList();
+
+      if (idFiltered.isNotEmpty) {
+        questions.assignAll(idFiltered);
+      } else {
+        questions.assignAll(allDayQuestions);
+      }
+    } else {
+      questions.assignAll(allDayQuestions);
+    }
+
+    index.value = 0;
+    score.value = 0;
+    selected.value = "";
+    answerPerQuestion.value = List.filled(questions.length, '');
+    skippedQuestions.value = List.filled(questions.length, false);
+    answersList.assignAll(
+        List.generate(questions.length, (index) => AnswerModel()));
+
+    startTimer();
   }
 
   Future<void> submitFinalAnswer(int classId, int dayId) async {

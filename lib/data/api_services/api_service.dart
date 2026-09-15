@@ -149,22 +149,30 @@ class ApiServices {
 
   static Future<List<QuestionModel>> getQuestions(String dayId, String classId) async {
     try {
-      final response = await ApiHelper.post(
-        AppConfig.getQuestion,
-        body: {
-          "day_id": dayId,
-          "class_id": classId,
-        },
-      );
+      // Send with query params since PHP script expects $_GET['day_id']
+      final endpointWithQuery = "${AppConfig.getQuestion}?day_id=$dayId&class_id=$classId";
+      
+      var response = await ApiHelper.get(endpointWithQuery);
 
-      if (response['status'] == true) {
+      if (response['status'] != true) {
+        response = await ApiHelper.post(
+          endpointWithQuery,
+          body: {
+            "day_id": dayId,
+            "class_id": classId,
+          },
+        );
+      }
+
+      if (response['status'] == true && response['data'] != null) {
         List data = response['data'];
         return data.map((e) => QuestionModel.fromJson(e)).toList();
       }
 
       return [];
     } catch (e) {
-      throw Exception(e.toString());
+      print("getQuestions Error => $e");
+      return [];
     }
   }
 

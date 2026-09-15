@@ -1,12 +1,11 @@
-import 'dart:math';
-
 import 'package:always_victory/controller/question_controller.dart';
 import 'package:always_victory/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../constants/app_colors.dart';
-import '../../widgets/score_card.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
 
 class DemoResultScreen extends StatelessWidget {
   const DemoResultScreen({super.key});
@@ -15,288 +14,218 @@ class DemoResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = Get.arguments as Map<String, dynamic>;
 
-    final int score = data["score"];
-    final int total = data["total"];
-    final double percent = (score / total) * 100;
+    final int score = data["score"] ?? 0;
+    final int total = data["total"] ?? 0;
+    final double percent = total > 0 ? (score / total) * 100 : 0.0;
 
-    ResultLevel resultLevel;
-    String message;
-    Color color;
-    IconData icon;
-    String emoji;
+    String titleMsg;
+    String subtitleMsg;
+    Color accentColor;
+    IconData heroIcon;
 
     if (percent >= 80) {
-      resultLevel = ResultLevel.excellent;
-      message = "Excellent!";
-      color = AppColors.correct;
-      icon = Icons.emoji_events;
-      emoji = "🎉";
-    } else if (percent >= 60) {
-      resultLevel = ResultLevel.good;
-      message = "Good Job!";
-      color = AppColors.unanswered;
-      icon = Icons.thumb_up;
-      emoji = "👍";
-    } else if (percent >= 40) {
-      resultLevel = ResultLevel.average;
-      message = "Keep Going!";
-      color = AppColors.accent;
-      icon = Icons.school;
-      emoji = "📚";
+      titleMsg = "Excellent Job! 🏆";
+      subtitleMsg = "You answered most questions correctly!";
+      accentColor = const Color(0xFF10B981);
+      heroIcon = Icons.emoji_events_rounded;
+    } else if (percent >= 50) {
+      titleMsg = "Good Work! 👍";
+      subtitleMsg = "Keep practicing to improve your score!";
+      accentColor = const Color(0xFFF59E0B);
+      heroIcon = Icons.thumb_up_rounded;
     } else {
-      resultLevel = ResultLevel.needsImprovement;
-      message = "Keep Practicing!";
-      color = AppColors.wrong;
-      icon = Icons.fitness_center;
-      emoji = "💪";
+      titleMsg = "Practice Required! 💪";
+      subtitleMsg = "Don't give up! Try again to score better!";
+      accentColor = const Color(0xFFFF5252);
+      heroIcon = Icons.fitness_center_rounded;
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xfff5f7fb),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildTrophyAnimation(color, icon, resultLevel),
-                  const SizedBox(height: 20),
-                  _buildMessageWithAnimation(message, color, emoji),
-                  const SizedBox(height: 10),
-                  _buildScoreText(score, total),
-                  const SizedBox(height: 30),
-                  _buildStatCards(score, total, percent, color),
-                  const SizedBox(height: 40),
-                  _buildHomeButton(),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTrophyAnimation(Color color, IconData icon, ResultLevel level) {
-    return TweenAnimationBuilder(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.elasticOut,
-      builder: (context, value, child) {
-        final clampedValue = value.clamp(0.0, 1.0);
-
-        return Transform.scale(
-          scale: clampedValue,
-          child: Stack(
-            alignment: Alignment.center,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
+          child: Column(
             children: [
+              const SizedBox(height: 20),
+
+              /// 1. TOP BADGE
               Container(
-                padding: const EdgeInsets.all(10),
-                width: 180,
-                height: 180,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: color,
-                    width: 4,
-                  ),
+                  color: accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.2)),
                 ),
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withOpacity(0.1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 30,
-                        spreadRadius: 5,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🎉', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 6),
+                    Text(
+                      "TEST COMPLETED",
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: accentColor,
+                        letterSpacing: 1.0,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              Icon(
-                icon,
-                size: 100,
-                color: color,
+
+              const SizedBox(height: 30),
+
+              /// 2. GLOWING ANIMATED EMBLEM
+              TweenAnimationBuilder(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accentColor.withValues(alpha: 0.1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.25),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          heroIcon,
+                          size: 70,
+                          color: accentColor,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-              ...List.generate(8, (index) {
-                final angle = (index / 8) * 2 * pi;
-                final distance = 60 + (clampedValue * 20);
-                return Positioned(
-                  left: 70 + cos(angle) * distance,
-                  top: 70 + sin(angle) * distance,
-                  child: Opacity(
-                    opacity: clampedValue,
-                    child: Icon(
-                      _getRandomConfettiIcon(index),
-                      size: 20 + (index % 2) * 10,
-                      color: _getConfettiColor(index),
+
+              const SizedBox(height: 24),
+
+              /// 3. MESSAGE
+              Text(
+                titleMsg,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.h2.copyWith(
+                  color: AppColors.textDark,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                subtitleMsg,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium,
+              ),
+
+              const SizedBox(height: 28),
+
+              /// 4. SCORE STAT CARDS
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatTile("Score", "$score", const Color(0xFF6366F1), Icons.star_rounded),
+                    _buildDivider(),
+                    _buildStatTile("Total", "$total", AppColors.primary, Icons.quiz_rounded),
+                    _buildDivider(),
+                    _buildStatTile("Accuracy", "${percent.toStringAsFixed(0)}%", accentColor, Icons.percent_rounded),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              /// 5. HOME BUTTON
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                );
-              }),
+                  onPressed: () {
+                    QuestionController.instance.resetQuizState();
+                    Get.offAllNamed(AppRoutes.bottomNav);
+                  },
+                  icon: const Icon(Icons.home_rounded, size: 20),
+                  label: Text(
+                    "Back to Home",
+                    style: AppTextStyles.button,
+                  ),
+                ),
+              ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  Widget _buildMessageWithAnimation(String message, Color color, String emoji) {
+  Widget _buildStatTile(String label, String value, Color color, IconData icon) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 40),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          message,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: color,
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
           ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: AppTextStyles.h4.copyWith(
+            color: AppColors.textDark,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: AppTextStyles.caption,
         ),
       ],
     );
   }
 
-  Widget _buildScoreText(int score, int total) {
-    return TweenAnimationBuilder(
-      tween: IntTween(begin: 0, end: score),
-      duration: const Duration(milliseconds: 1000),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Text(
-          "Your Score: $value / $total",
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
-        );
-      },
+  Widget _buildDivider() {
+    return Container(
+      height: 36,
+      width: 1,
+      color: Colors.grey.shade200,
     );
   }
-
-  Widget _buildStatCards(int score, int total, double percent, Color color) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildAnimatedStatCard(
-          label: "Score",
-          value: "$score",
-          color: AppColors.accent,
-          icon: Icons.star,
-          delay: 0,
-        ),
-        _buildAnimatedStatCard(
-          label: "Total",
-          value: "$total",
-          color: AppColors.primary,
-          icon: Icons.list,
-          delay: 200,
-        ),
-        _buildAnimatedStatCard(
-          label: "Result",
-          value: "${percent.toStringAsFixed(0)}%",
-          color: color,
-          icon: Icons.percent,
-          delay: 400,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAnimatedStatCard({
-    required String label,
-    required String value,
-    required Color color,
-    required IconData icon,
-    required int delay,
-  }) {
-    return TweenAnimationBuilder(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-      child: ScoreStatCard(
-        label: label,
-        value: value,
-        color: color,
-        icon: icon,
-      ),
-      builder: (context, value, child) {
-        final clampedValue = value.clamp(0.0, 1.0);
-        return Transform.translate(
-          offset: Offset(0, 50 * (1 - clampedValue)),
-          child: Opacity(
-            opacity: clampedValue,
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHomeButton() {
-    return TextButton(
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-      ),
-      onPressed: () {
-        _goHome();
-      },
-      child: const Text(
-        "Go Home",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  void _goHome() {
-    QuestionController.instance.resetQuizState();
-    Get.offAllNamed(AppRoutes.bottomNav);
-  }
-
-  IconData _getRandomConfettiIcon(int index) {
-    final icons = [
-      Icons.star,
-      Icons.star_half,
-      Icons.circle,
-      Icons.square,
-      Icons.favorite,
-      Icons.emoji_emotions,
-      Icons.celebration,
-    ];
-    return icons[index % icons.length];
-  }
-
-  Color _getConfettiColor(int index) {
-    final colors = [
-      Colors.red,
-      Colors.orange,
-      Colors.yellow,
-      Colors.green,
-      Colors.blue,
-      Colors.purple,
-      Colors.pink,
-      Colors.teal,
-    ];
-    return colors[index % colors.length];
-  }
-}
-
-enum ResultLevel {
-  excellent,
-  good,
-  average,
-  needsImprovement,
 }

@@ -1,6 +1,8 @@
 import 'package:always_victory/data/app_config/app_config.dart';
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
 import '../models/day_model.dart';
 
 class DaysListTile extends StatelessWidget {
@@ -15,115 +17,106 @@ class DaysListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print( "${AppConfig.imageBaseUrl}${day.thumbnail}");
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          /// IMAGE
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: day.thumbnail.isNotEmpty
-                    ? Image.network(
-                  "${AppConfig.imageBaseUrl}${day.thumbnail}",
-                  height: 70,
-                  width: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    print("IMAGE ERROR => $error");
-
-                    return Container(
-                      height: 70,
-                      width: 90,
-                      color: Colors.red.shade100,
-                      child: const Icon(Icons.broken_image),
-                    );
-                  },
-                )
-                    : Container(
-                  height: 70,
-                  width: 90,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.image),
-                ),
-              ),
-
-            ],
+          /// Thumbnail Image Frame
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: day.thumbnail.isNotEmpty
+                ? Image.network(
+                    "${AppConfig.imageBaseUrl}${day.thumbnail}",
+                    height: 75,
+                    width: 85,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 75,
+                      width: 85,
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      child: const Icon(
+                        Icons.quiz_rounded,
+                        color: AppColors.primary,
+                        size: 32,
+                      ),
+                    ),
+                  )
+                : Container(
+                    height: 75,
+                    width: 85,
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    child: const Icon(
+                      Icons.quiz_rounded,
+                      color: AppColors.primary,
+                      size: 32,
+                    ),
+                  ),
           ),
 
           const SizedBox(width: 12),
 
-          /// CONTENT
+          /// Content Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                /// TOP ROW
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        day.dayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                // Day Tag Pill
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    day.dayName.isNotEmpty ? day.dayName : "Day ${index + 1}",
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                      fontSize: 10,
                     ),
-
-
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                /// TITLE
-                Text(
-                  day.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
 
                 const SizedBox(height: 4),
 
-                /// DESCRIPTION
+                // Title
                 Text(
-                  day.description,
-                  maxLines: 2,
+                  day.title,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+
+                // Description
+                Text(
+                  day.description.isNotEmpty
+                      ? day.description
+                      : "Practice questions & test concepts",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodySmall.copyWith(
                     color: Colors.grey.shade600,
                   ),
                 ),
@@ -133,13 +126,17 @@ class DaysListTile extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          /// ARROW
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: Colors.grey.shade600,
+          /// Play Action Icon
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: AppColors.primary,
+              size: 20,
             ),
           ),
         ],

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:always_victory/data/app_config/app_config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiHelper {
@@ -20,133 +21,133 @@ class ApiHelper {
   // ================= GET =================
 
   static Future<dynamic> get(
-      String endpoint, {
-        String? token,
-      }) async {
+    String endpoint, {
+    String? token,
+  }) async {
     try {
+      final safeUrl = Uri.encodeFull('$baseUrl$endpoint');
       final response = await http.get(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(safeUrl),
         headers: headers(token: token),
       );
-      print("URL => $baseUrl$endpoint");
-      print("STATUS => ${response.statusCode}");
-      print("BODY => ${response.body}");
+      debugPrint("URL => $safeUrl");
+      debugPrint("STATUS => ${response.statusCode}");
+      debugPrint("BODY => ${response.body}");
       return _handleResponse(response);
     } on SocketException {
-      throw Exception('No Internet Connection');
+      return {'status': false, 'message': 'No Internet Connection'};
     } catch (e) {
-      throw Exception(e.toString());
+      debugPrint("GET Error => $e");
+      return {'status': false, 'message': e.toString()};
     }
   }
 
   // ================= POST =================
 
   static Future<dynamic> post(
-      String endpoint, {
-        Map<String, dynamic>? body,
-        String? token,
-      }) async {
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  }) async {
     try {
+      final safeUrl = Uri.encodeFull('$baseUrl$endpoint');
       final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(safeUrl),
         headers: headers(token: token),
         body: jsonEncode(body ?? {}),
       );
-      print("URL => $baseUrl$endpoint");
-      print("STATUS => ${response.statusCode}");
-      print("BODY => ${response.body}");
+      debugPrint("URL => $safeUrl");
+      debugPrint("STATUS => ${response.statusCode}");
+      debugPrint("BODY => ${response.body}");
       return _handleResponse(response);
     } on SocketException {
-      throw Exception('No Internet Connection');
+      return {'status': false, 'message': 'No Internet Connection'};
     } catch (e) {
-      throw Exception(e.toString());
+      debugPrint("POST Error => $e");
+      return {'status': false, 'message': e.toString()};
     }
   }
 
   // ================= PUT =================
 
   static Future<dynamic> put(
-      String endpoint, {
-        Map<String, dynamic>? body,
-        String? token,
-      }) async {
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  }) async {
     try {
+      final safeUrl = Uri.encodeFull('$baseUrl$endpoint');
       final response = await http.put(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(safeUrl),
         headers: headers(token: token),
         body: jsonEncode(body ?? {}),
       );
 
       return _handleResponse(response);
     } on SocketException {
-      throw Exception('No Internet Connection');
+      return {'status': false, 'message': 'No Internet Connection'};
     } catch (e) {
-      throw Exception(e.toString());
+      return {'status': false, 'message': e.toString()};
     }
   }
 
   // ================= DELETE =================
 
   static Future<dynamic> delete(
-      String endpoint, {
-        String? token,
-      }) async {
+    String endpoint, {
+    String? token,
+  }) async {
     try {
+      final safeUrl = Uri.encodeFull('$baseUrl$endpoint');
       final response = await http.delete(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(safeUrl),
         headers: headers(token: token),
       );
 
       return _handleResponse(response);
     } on SocketException {
-      throw Exception('No Internet Connection');
+      return {'status': false, 'message': 'No Internet Connection'};
     } catch (e) {
-      throw Exception(e.toString());
+      return {'status': false, 'message': e.toString()};
     }
   }
 
   // ================= RESPONSE HANDLER =================
 
-  static dynamic _handleResponse(
-      http.Response response,
-      ) {
+  static dynamic _handleResponse(http.Response response) {
+    try {
+      final bodyText = response.body.trim();
+      if (bodyText.isEmpty) {
+        return {
+          'status': false,
+          'message': 'Empty response from server (HTTP ${response.statusCode})',
+        };
+      }
 
-    final data = jsonDecode(response.body);
+      final data = jsonDecode(bodyText);
 
-    switch (response.statusCode) {
-      case 200:
-      case 201:
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         return data;
+      }
 
-      case 400:
-        throw Exception(
-          data['message'] ?? 'Bad Request',
-        );
+      if (data is Map) {
+        return {
+          'status': false,
+          'message': data['message'] ?? 'Server error (${response.statusCode})',
+          'data': data['data'] ?? [],
+        };
+      }
 
-      case 401:
-        throw Exception(
-          data['message'] ?? 'Unauthorized',
-        );
-
-      case 403:
-        throw Exception(
-          data['message'] ?? 'Forbidden',
-        );
-
-      case 404:
-        throw Exception(
-          data['message'] ?? 'Not Found',
-        );
-
-      case 500:
-        throw Exception(
-          data['message'] ?? 'Server Error',
-        );
-
-      default:
-        throw Exception(
-          'Error: ${response.statusCode}',
-        );
+      return {
+        'status': false,
+        'message': 'Error ${response.statusCode}',
+      };
+    } catch (e) {
+      debugPrint("JSON Decode Error => $e");
+      return {
+        'status': false,
+        'message': 'Invalid response format (${response.statusCode})',
+      };
     }
   }
 }

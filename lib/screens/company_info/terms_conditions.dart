@@ -1,7 +1,10 @@
-import 'package:always_victory/constants/app_colors.dart';
-import 'package:always_victory/screens/company_info/widgets/policy_section.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
+import 'widgets/policy_section.dart';
 
 class TermsConditionScreen extends StatelessWidget {
   const TermsConditionScreen({super.key});
@@ -9,65 +12,58 @@ class TermsConditionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF8FAFC),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Terms & Conditions",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: AppColors.primary,
+        elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.appGradient,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
       ),
       body: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppConstants.paddingMD),
         children: [
           Center(
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: const Color(0xFFFFF3CD),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.gavel_rounded,
-                size: 60,
-                color: Colors.orange,
+                size: 48,
+                color: Color(0xFFD84315),
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          const Center(
+          const SizedBox(height: 16),
+          Center(
             child: Text(
               "Terms of Service",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textDark,
-              ),
+              style: AppTextStyles.h2,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Center(
             child: Text(
               "Last Updated: January 2026",
-              style: TextStyle(
-                color: AppColors.textGrey.withOpacity(0.6),
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
+              style: AppTextStyles.caption,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           const PolicySection(
             icon: Icons.check_circle_rounded,
             title: "Acceptance",
@@ -98,25 +94,25 @@ class TermsConditionScreen extends StatelessWidget {
             title: "Changes",
             content: "We reserve the right to update these terms. Continued use of the app after changes implies acceptance of the new Terms.",
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(20),
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.15),
+              ),
             ),
-            child: const Center(
-              child: Text(
-                "Thank you for being part of Always Victory. 🚀",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+            child: Text(
+              "Thank you for being part of Always Victory. 🚀",
+              textAlign: TextAlign.center,
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
               ),
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
         ],
       ),
     );

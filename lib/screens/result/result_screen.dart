@@ -3,10 +3,10 @@ import 'package:always_victory/helpers/voice_helper.dart';
 import 'package:always_victory/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:math' as math;
 
 import '../../constants/app_colors.dart';
-import '../../widgets/score_card.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -19,7 +19,7 @@ class _ResultScreenState extends State<ResultScreen> {
   late final int score;
   late final int total;
   late final double percent;
-  
+
   @override
   void initState() {
     super.initState();
@@ -34,24 +34,22 @@ class _ResultScreenState extends State<ResultScreen> {
       percent = 0.0;
       debugPrint("ResultScreen Args Error: $e");
     }
-    
-    // Initialize Voice and Speak
+
     _initializeAndSpeak();
   }
 
   Future<void> _initializeAndSpeak() async {
     try {
       await VoiceHelper.init();
-      // Wait for animations to start
-      await Future.delayed(const Duration(milliseconds: 1200));
-      
+      await Future.delayed(const Duration(milliseconds: 800));
+
       String msg = "";
       if (percent >= 80) {
         msg = "वाह! आप एक सुपरस्टार हैं! आपको $score में से $total मिले। आपके लिए पाँच सितारे!";
       } else if (percent >= 50) {
-        msg = "बहुत अच्छा प्रयास! आपको $score सही उत्तर मिले। आगे बढ़ते रहें, और अगली बार आप और भी ज्यादा सितारे पाएँगे!";
+        msg = "बहुत अच्छा प्रयास! आपको $score सही उत्तर मिले। आगे बढ़ते रहें!";
       } else {
-        msg = "अच्छा प्रयास! आपको $score सही उत्तर मिले। आइए फिर से अभ्यास करें और मास्टर बनें!";
+        msg = "अच्छा प्रयास! आइए फिर से अभ्यास करें और मास्टर बनें!";
       }
       await VoiceHelper.speak(msg);
     } catch (e) {
@@ -67,227 +65,232 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String message;
-    Color color;
-    IconData icon;
+    String titleMsg;
+    String subtitleMsg;
+    Color accentColor;
+    IconData heroIcon;
 
     if (percent >= 80) {
-      message = "Excellent! 🏆";
-      color = AppColors.correct;
-      icon = Icons.emoji_events_rounded;
+      titleMsg = "Superstar Performance! 🏆";
+      subtitleMsg = "Outstanding accuracy! Keep shining!";
+      accentColor = const Color(0xFF10B981); // Mint Green
+      heroIcon = Icons.emoji_events_rounded;
     } else if (percent >= 50) {
-      message = "Great Work! 👍";
-      color = AppColors.unanswered;
-      icon = Icons.stars_rounded;
+      titleMsg = "Great Effort! 👍";
+      subtitleMsg = "Good job! A little more practice and you'll reach 100%!";
+      accentColor = const Color(0xFFF59E0B); // Amber
+      heroIcon = Icons.stars_rounded;
     } else {
-      message = "Good Effort! 💪";
-      color = AppColors.wrong;
-      icon = Icons.auto_awesome_rounded;
+      titleMsg = "Keep Practicing! 💪";
+      subtitleMsg = "Practice makes perfect! Try again to score higher!";
+      accentColor = const Color(0xFFFF5252); // Red
+      heroIcon = Icons.auto_awesome_rounded;
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xfff5f7fb),
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              color.withOpacity(0.05),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 30),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
 
-                // 🎉 Celebration Header
-                Text(
-                  "Quiz Completed!",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                    letterSpacing: 1.2,
-                  ),
+              /// 1. TOP BADGE
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.2)),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('🎉', style: const TextStyle(fontSize: 14)),
+                    const SizedBox(width: 6),
+                    Text(
+                      "QUIZ COMPLETED",
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: accentColor,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-                /// 🎉 Animated Trophy/Icon
-                TweenAnimationBuilder(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.elasticOut,
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: value,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Glow Background
-                          Container(
-                            width: 160,
-                            height: 160,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: color.withOpacity(0.1),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withOpacity(0.2),
-                                  blurRadius: 40,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            icon,
-                            size: 80,
-                            color: color,
+              /// 2. GLOWING ANIMATED EMBLEM
+              TweenAnimationBuilder(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accentColor.withValues(alpha: 0.1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.25),
+                            blurRadius: 30,
+                            spreadRadius: 5,
                           ),
                         ],
                       ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 20),
-
-                /// 🧠 Big Result Message
-                TweenAnimationBuilder(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - value)),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Stars System
-                _buildStarRating(percent),
-
-                const SizedBox(height: 24),
-
-                /// 📦 Stats Area
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _statItem("Score", "$score/$total", AppColors.accent,
-                            Icons.workspace_premium),
-                        _divider(),
-                        _statItem("Accuracy", "${percent.toStringAsFixed(0)}%",
-                            color, Icons.track_changes),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                /// 🔄 Actions
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            elevation: 8,
-                            shadowColor: AppColors.primary.withOpacity(0.4),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          onPressed: () {
-                          // Clean reset and Play Again
-                          try {
-                            final controller = QuestionController.instance;
-                            controller.resetQuizState();
-                            controller.startTimer();
-                            Get.offNamed(AppRoutes.quiz);
-                          } catch (e) {
-                            Get.snackbar(
-                              "Error",
-                              "Could not restart quiz. Returning home.",
-                              backgroundColor: Colors.red.shade100,
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                            Future.delayed(const Duration(seconds: 1), () {
-                              Get.offAllNamed(AppRoutes.bottomNav);
-                            });
-                          }
-                        },
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text(
-                            "Play Again",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
+                      child: Center(
+                        child: Icon(
+                          heroIcon,
+                          size: 70,
+                          color: accentColor,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey.shade700,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 24),
-                        ),
-                        onPressed: () {
-                        QuestionController.instance.resetQuizState();
-                        Get.offAllNamed(AppRoutes.bottomNav);
-                      },
-                        child: const Text(
-                          "Go Home",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      )
-                    ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              /// 3. CELEBRATORY HEADLINE
+              Text(
+                titleMsg,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.h2.copyWith(
+                  color: AppColors.textDark,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  subtitleMsg,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyMedium,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              /// 4. FIVE STAR RATING SYSTEM
+              _buildStarRating(percent),
+
+              const SizedBox(height: 28),
+
+              /// 5. PERFORMANCE STAT CARDS
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatTile(
+                      label: "Score",
+                      value: "$score / $total",
+                      icon: Icons.workspace_premium_rounded,
+                      color: const Color(0xFF6366F1), // Indigo
+                    ),
+                    _buildVerticalDivider(),
+                    _buildStatTile(
+                      label: "Accuracy",
+                      value: "${percent.toStringAsFixed(0)}%",
+                      icon: Icons.track_changes_rounded,
+                      color: accentColor,
+                    ),
+                    _buildVerticalDivider(),
+                    _buildStatTile(
+                      label: "Reward",
+                      value: "+12 Stars",
+                      icon: Icons.stars_rounded,
+                      color: const Color(0xFFF59E0B), // Gold
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 36),
+
+              /// 6. ACTION BUTTONS
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () {
+                    try {
+                      final controller = QuestionController.instance;
+                      controller.resetQuizState();
+                      controller.startTimer();
+                      Get.offNamed(AppRoutes.quiz);
+                    } catch (e) {
+                      Get.offAllNamed(AppRoutes.bottomNav);
+                    }
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  label: Text(
+                    "Play Again",
+                    style: AppTextStyles.button,
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textDark,
+                    side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () {
+                    QuestionController.instance.resetQuizState();
+                    Get.offAllNamed(AppRoutes.bottomNav);
+                  },
+                  icon: const Icon(Icons.home_rounded, size: 20),
+                  label: Text(
+                    "Back to Home",
+                    style: AppTextStyles.button.copyWith(
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),
@@ -295,27 +298,35 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _buildStarRating(double percentage) {
-    int starCount = 0;
-    if (percentage >= 95) starCount = 5;
-    else if (percentage >= 80) starCount = 4;
-    else if (percentage >= 60) starCount = 3;
-    else if (percentage >= 40) starCount = 2;
-    else starCount = 1;
+    int starCount = 1;
+    if (percentage >= 95) {
+      starCount = 5;
+    } else if (percentage >= 80) {
+      starCount = 4;
+    } else if (percentage >= 60) {
+      starCount = 3;
+    } else if (percentage >= 40) {
+      starCount = 2;
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
+        final isFilled = index < starCount;
         return TweenAnimationBuilder(
           tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 400 + (index * 200)),
+          duration: Duration(milliseconds: 300 + (index * 150)),
           curve: Curves.easeOutBack,
           builder: (context, value, child) {
             return Transform.scale(
               scale: value,
-              child: Icon(
-                index < starCount ? Icons.star_rounded : Icons.star_outline_rounded,
-                color: index < starCount ? Colors.amber : Colors.grey.shade300,
-                size: 45,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Icon(
+                  isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: isFilled ? const Color(0xFFF59E0B) : Colors.grey.shade300,
+                  size: 38,
+                ),
               ),
             );
           },
@@ -324,35 +335,43 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  Widget _statItem(String label, String value, Color color, IconData icon) {
+  Widget _buildStatTile({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color.withOpacity(0.7), size: 24),
-        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
+          style: AppTextStyles.h4.copyWith(
+            color: AppColors.textDark,
+            fontSize: 16,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
+          style: AppTextStyles.caption,
         ),
       ],
     );
   }
 
-  Widget _divider() {
+  Widget _buildVerticalDivider() {
     return Container(
-      height: 40,
+      height: 36,
       width: 1,
       color: Colors.grey.shade200,
     );

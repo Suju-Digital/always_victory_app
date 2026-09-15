@@ -1,8 +1,10 @@
-import 'package:always_victory/constants/app_colors.dart';
-import 'package:always_victory/controller/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
+import '../../controller/auth_controller.dart';
 import '../../controller/class_controller.dart';
 import '../../controller/progress_controller.dart';
 
@@ -15,26 +17,19 @@ class ProgressReportScreen extends GetView<ProgressController> {
     final classController = Get.find<ClassController>();
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('📊', style: TextStyle(fontSize: 24)),
-            const SizedBox(width: 8),
-            const Text(
-              "My Progress",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontSize: 20,
-              ),
-            ),
-          ],
+        title: Text(
+          "Parent Progress Report",
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.appGradient,
@@ -42,218 +37,190 @@ class ProgressReportScreen extends GetView<ProgressController> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.emoji_events, color: Colors.amber),
+            icon: const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B)),
             onPressed: () {
               Get.snackbar(
-                '🏆 Achievements',
-                'Keep learning to unlock more badges!',
+                '🏆 Reward Badges',
+                'Your child has earned 120 star coins!',
                 snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: Colors.amber.shade100,
-                duration: const Duration(seconds: 2),
+                colorText: Colors.amber.shade900,
               );
             },
           ),
         ],
       ),
-      body: Obx(
-            () => SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              /// Welcome Header Card with Animation
-              TweenAnimationBuilder(
-                duration: const Duration(milliseconds: 600),
-                tween: Tween<double>(begin: 0, end: 1),
-                curve: Curves.easeOutBack,
-                builder: (context, value, child) {
-                  return Transform.scale(
-                    scale: 0.9 + (0.1 * value),
-                    child: Opacity(
-                      opacity: value.clamp(0.0, 1.0),
-                      child: child,
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        onRefresh: () async {
+          final studentId = int.tryParse(authController.student.value.id ?? '0') ?? 0;
+          if (studentId > 0) {
+            await controller.getProgress(studentId);
+          }
+          await ClassController.instance.getAllClassesProgress();
+        },
+        child: Obx(
+          () => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            padding: const EdgeInsets.all(AppConstants.paddingMD),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              /// 1. STUDENT PROFILE & OVERALL ACCURACY CARD
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: AppColors.appGradient,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
                     ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient:AppColors.appGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '👋',
-                              style: TextStyle(fontSize: 28),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  authController.student.value.name ?? "No Name",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        '📚',
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "Class ${authController.student.value.className}",
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '⭐',
-                              style: TextStyle(fontSize: 24),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                children: [
-                                  Obx(() => Text(
-                                    "${controller.accuracy.value.toStringAsFixed(0)}%",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )),
-                                  const Text(
-                                    "🎯 Overall Accuracy",
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Obx(() => LinearProgressIndicator(
-                                    value: controller.accuracy.value / 100,
-                                    backgroundColor: Colors.white.withOpacity(0.2),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      controller.accuracy.value >= 75
-                                          ? Colors.green
-                                          : controller.accuracy.value >= 50
-                                          ? Colors.orange
-                                          : Colors.red,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  )),
-                                  const SizedBox(height: 4),
-                                  Obx(() => Text(
-                                    "${controller.correctAnswers.value}/${controller.totalQuestions.value} Questions",
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  )),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Stats with Emojis
-              TweenAnimationBuilder(
-                duration: const Duration(milliseconds: 800),
-                tween: Tween<double>(begin: 0, end: 1),
-                curve: Curves.easeOut,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value.clamp(0.0, 1.0),
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _statCard(
-                        "📝 Questions",
-                        controller.totalQuestions.value.toString(),
-                        Icons.quiz,
-                        AppColors.accent,
-                      ),
+                    // Header: Student Name & Class
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          child: const Text('👨‍🎓', style: TextStyle(fontSize: 24)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                authController.student.value.name ?? "Student",
+                                style: AppTextStyles.h3.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  "Class ${authController.student.value.className ?? 'Practice'}",
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF59E0B),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.stars_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "120",
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _statCard(
-                        "✅ Correct",
-                        controller.correctAnswers.value.toString(),
-                        Icons.check_circle,
-                        AppColors.correct,
+
+                    const SizedBox(height: 20),
+
+                    // Overall Accuracy Gauge Box
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "🎯 Overall Accuracy",
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                "${controller.accuracy.value.toStringAsFixed(0)}%",
+                                style: AppTextStyles.h2.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: controller.accuracy.value / 100,
+                              minHeight: 8,
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                controller.accuracy.value >= 75
+                                    ? const Color(0xFF10B981)
+                                    : controller.accuracy.value >= 50
+                                        ? const Color(0xFFF59E0B)
+                                        : const Color(0xFFFF5252),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Total Questions Answered",
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white70,
+                                ),
+                              ),
+                              Text(
+                                "${controller.correctAnswers.value} / ${controller.totalQuestions.value} Correct",
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -262,596 +229,513 @@ class ProgressReportScreen extends GetView<ProgressController> {
 
               const SizedBox(height: 20),
 
-              /// Motivation Card
-              TweenAnimationBuilder(
-                duration: const Duration(milliseconds: 1000),
-                tween: Tween<double>(begin: 0, end: 1),
-                curve: Curves.easeOut,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value.clamp(0.0, 1.0),
-                    child: child,
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary.withOpacity(0.1),
-                        AppColors.primary.withOpacity(0.2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(0.3),
-                      width: 2,
+              /// 2. KPI PERFORMANCE GRID
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildKpiCard(
+                      title: "Questions",
+                      value: "${controller.totalQuestions.value}",
+                      icon: Icons.quiz_rounded,
+                      color: const Color(0xFF6366F1),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.shade200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text(
-                          '🏆',
-                          style: TextStyle(fontSize: 28),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "🌟 Keep Going!",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.deepOrange,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "Tap a class below to see your detailed progress!",
-                              style: TextStyle(
-                                color: Colors.grey.shade700,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Text(
-                        '🚀',
-                        style: TextStyle(fontSize: 30),
-                      ),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildKpiCard(
+                      title: "Correct",
+                      value: "${controller.correctAnswers.value}",
+                      icon: Icons.check_circle_rounded,
+                      color: const Color(0xFF10B981),
+                    ),
                   ),
-                ),
+                ],
               ),
 
               const SizedBox(height: 20),
 
-              /// Classes Progress List
-              Obx(() {
-                if (classController.classes.isEmpty) {
-                  return Container(
-                    padding: const EdgeInsets.all(40),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+              /// 3. PARENT INSIGHT TIP CARD
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4E8),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFFFB800).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text('💡', style: TextStyle(fontSize: 22)),
                     ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          '📚',
-                          style: TextStyle(fontSize: 60),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "No Classes Yet",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Start learning to track your progress! 🌟",
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: classController.classes.length,
-                  itemBuilder: (context, classIndex) {
-                    final cls = classController.classes[classIndex];
-
-                    return TweenAnimationBuilder(
-                      duration: Duration(milliseconds: 300 + (classIndex * 50)),
-                      tween: Tween<double>(begin: 0, end: 1),
-                      curve: Curves.easeOutBack,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: Transform.translate(
-                            offset: Offset(50 * (1 - value), 0),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Theme(
-                          data: Theme.of(context).copyWith(
-                            dividerColor: Colors.transparent,
-                          ),
-                          child: ExpansionTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                '📖',
-                                style: TextStyle(fontSize: 24),
-                              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Parent Insight",
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color: const Color(0xFFE65100),
                             ),
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "Daily 15-minute practice improves accuracy by 40%. Keep encouraging your child!",
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              /// 4. DETAILED CLASS PRACTICE HISTORY (PURCHASED CLASSES ONLY)
+              Text(
+                "Purchased Class Progress 📚",
+                style: AppTextStyles.h4,
+              ),
+
+              const SizedBox(height: 12),
+
+              Builder(
+                builder: (context) {
+                  final purchasedClasses = classController.classes
+                      .where((cls) => classController.purchaseClass[cls.id] == true)
+                      .toList();
+
+                  if (purchasedClasses.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(32),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text('📚', style: TextStyle(fontSize: 48)),
+                          const SizedBox(height: 12),
+                          Text(
+                            "No Purchased Classes Yet",
+                            style: AppTextStyles.h3,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Enroll in a class from Home to start tracking progress!",
+                            style: AppTextStyles.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: purchasedClasses.length,
+                    itemBuilder: (context, classIndex) {
+                      final cls = purchasedClasses[classIndex];
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          dividerColor: Colors.transparent,
+                        ),
+                        child: ExpansionTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text('📖', style: TextStyle(fontSize: 20)),
+                          ),
+                          title: Text(
+                            cls.className,
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Obx(() {
+                            final progress = controller.getClassProgress(cls.id);
+                            final totalQ = controller.getClassTotalQuestions(cls.id);
+                            final solvedQ = controller.getClassSolvedQuestions(cls.id);
+
+                            return Row(
                               children: [
                                 Text(
-                                  cls.className,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                  '${progress.toStringAsFixed(0)}% Completed',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: controller.getProgressColor(progress),
                                   ),
                                 ),
-                                Obx(() {
-                                  final progress = controller.getClassProgress(cls.id);
-                                  final totalQ = controller.getClassTotalQuestions(cls.id);
-                                  final solvedQ = controller.getClassSolvedQuestions(cls.id);
+                                const SizedBox(width: 8),
+                                Text(
+                                  '• $solvedQ/$totalQ Solved',
+                                  style: AppTextStyles.bodySmall,
+                                ),
+                              ],
+                            );
+                          }),
+                          onExpansionChanged: (expanded) async {
+                            if (expanded) {
+                              try {
+                                await controller.loadDays(
+                                  cls.id,
+                                  forceRefresh: true,
+                                );
+                              } catch (e) {
+                                debugPrint("Load Days Error: $e");
+                              }
+                            }
+                          },
+                          children: [
+                            Obx(() {
+                              final days = controller.classDays[cls.id] ?? [];
 
-                                  return Row(
-                                    children: [
-                                      Text(
-                                        '📊 ${progress.toStringAsFixed(0)}%',
-                                        style: TextStyle(
-                                          color: controller.getProgressColor(progress),
-                                          fontWeight: FontWeight.w600,
+                              if (days.isEmpty) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    "No day modules found",
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                );
+                              }
+
+                              return Column(
+                                children: days.map((day) {
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8FAFC),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: ExpansionTile(
+                                      leading: const Icon(
+                                        Icons.calendar_today_rounded,
+                                        size: 18,
+                                        color: AppColors.primary,
+                                      ),
+                                      title: Text(
+                                        day.dayName,
+                                        style: AppTextStyles.labelLarge.copyWith(
                                           fontSize: 13,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '📝 $solvedQ/$totalQ',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }),
-                              ],
-                            ),
-
-                            onExpansionChanged: (expanded) async {
-                              if (expanded) {
-                                try {
-                                  await controller.loadDays(
-                                    cls.id,
-                                    forceRefresh: true,
-                                  );
-                                } catch (e) {
-                                  Get.snackbar(
-                                    'Error',
-                                    'Failed to load days. Please try again.',
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    backgroundColor: Colors.red.shade100,
-                                  );
-                                }
-                              }
-                            },
-                            children: [
-                              Obx(() {
-                                final days = controller.classDays[cls.id] ?? [];
-
-                                if (days.isEmpty) {
-                                  return Container(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Column(
+                                      onExpansionChanged: (expanded) async {
+                                        if (expanded) {
+                                          try {
+                                            await controller.loadAttempts(
+                                              studentId: int.parse(
+                                                authController.student.value.id ?? '0',
+                                              ),
+                                              classId: cls.id,
+                                              dayId: day.id,
+                                            );
+                                          } catch (e) {
+                                            debugPrint("Load Attempts Error: $e");
+                                          }
+                                        }
+                                      },
                                       children: [
-                                        const Text(
-                                          '📅',
-                                          style: TextStyle(fontSize: 40),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          "No days available yet",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "Check back later! 📚",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 12,
-                                          ),
-                                        ),
+                                        Obx(() {
+                                          final key = "${cls.id}_${day.id}";
+                                          final attemptData = controller.attempts[key];
+
+                                          if (attemptData == null) {
+                                            return const Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            );
+                                          }
+
+                                          return DayAttemptsWidget(
+                                            attempts: attemptData.data,
+                                            getStars: controller.getStars,
+                                          );
+                                        }),
                                       ],
                                     ),
                                   );
-                                }
-
-                                return Column(
-                                  children: days.map((day) {
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      child: ExpansionTile(
-                                        leading: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.accent.withOpacity(0.1),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Text(
-                                            '📅',
-                                            style: TextStyle(fontSize: 20),
-                                          ),
-                                        ),
-                                        title: Text(
-                                          day.dayName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-
-                                        onExpansionChanged: (expanded) async {
-                                          if (expanded) {
-                                            try {
-                                              await controller.loadAttempts(
-                                                studentId: int.parse(
-                                                  authController.student.value.id ?? '0',
-                                                ),
-                                                classId: cls.id,
-                                                dayId: day.id,
-                                              );
-                                            } catch (e) {
-                                              Get.snackbar(
-                                                'Error',
-                                                'Failed to load attempts.',
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                backgroundColor: Colors.red.shade100,
-                                              );
-                                            }
-                                          }
-                                        },
-                                        children: [
-                                          Obx(() {
-                                            final key = "${cls.id}_${day.id}";
-                                            final attemptData = controller.attempts[key];
-
-                                            if (attemptData == null) {
-                                              return Container(
-                                                padding: const EdgeInsets.all(20),
-                                                child: const Center(
-                                                  child: CircularProgressIndicator(
-                                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                                      Colors.deepPurple,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-
-                                            if (attemptData.data.isEmpty) {
-                                              return Container(
-                                                padding: const EdgeInsets.all(20),
-                                                child: Column(
-                                                  children: [
-                                                    const Text(
-                                                      '🎯',
-                                                      style: TextStyle(fontSize: 40),
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    Text(
-                                                      "No attempts yet",
-                                                      style: TextStyle(
-                                                        color: Colors.grey.shade600,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      "Keep practicing! 💪",
-                                                      style: TextStyle(
-                                                        color: Colors.grey.shade500,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }
-
-                                            return ListView.builder(
-                                              shrinkWrap: true,
-                                              physics: const NeverScrollableScrollPhysics(),
-                                              itemCount: attemptData.data.length,
-                                              itemBuilder: (context, attemptIndex) {
-                                                final attempt = attemptData.data[attemptIndex];
-
-                                                return Container(
-                                                  margin: const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        AppColors.primary.withOpacity(0.05),
-                                                        AppColors.primary.withOpacity(0.1),
-                                                      ],
-                                                      begin: Alignment.topLeft,
-                                                      end: Alignment.bottomRight,
-                                                    ),
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(
-                                                      color: AppColors.primary.withOpacity(0.2),
-                                                      width: 1,
-                                                    ),
-                                                  ),
-                                                  child: ListTile(
-                                                    leading: Container(
-                                                      width: 40,
-                                                      height: 40,
-                                                      decoration: const BoxDecoration(
-                                                        gradient: AppColors.appGradient,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          "${attempt.attemptNo}",
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight: FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    title: Text(
-                                                      "🎯 Attempt ${attempt.attemptNo}",
-                                                      style: const TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 15,
-                                                      ),
-                                                    ),
-                                                    subtitle: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 4),
-                                                        Text(
-                                                          controller.getStars(attempt.percentage),
-                                                          style: const TextStyle(fontSize: 16),
-                                                        ),
-                                                        const SizedBox(height: 6),
-                                                        ClipRRect(
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          child: LinearProgressIndicator(
-                                                            value: attempt.percentage / 100,
-                                                            minHeight: 8,
-                                                            backgroundColor: Colors.grey.shade200,
-                                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                                              attempt.percentage >= 75
-                                                                  ? Colors.green
-                                                                  : attempt.percentage >= 50
-                                                                  ? Colors.orange
-                                                                  : Colors.red,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(height: 4),
-                                                        Row(
-                                                          children: [
-                                                            const Text(
-                                                              '✅ ',
-                                                              style: TextStyle(fontSize: 12),
-                                                            ),
-                                                            Text(
-                                                              "${attempt.correctAnswers}/${attempt.totalQuestions} Correct",
-                                                              style: TextStyle(
-                                                                color: Colors.grey.shade600,
-                                                                fontSize: 12,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    trailing: Container(
-                                                      padding: const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: attempt.percentage >= 75
-                                                              ? [Colors.green.shade400, Colors.green.shade700]
-                                                              : attempt.percentage >= 50
-                                                              ? [Colors.orange.shade400, Colors.orange.shade700]
-                                                              : [Colors.red.shade400, Colors.red.shade700],
-                                                        ),
-                                                        borderRadius: BorderRadius.circular(20),
-                                                      ),
-                                                      child: Text(
-                                                        "${attempt.percentage.toStringAsFixed(0)}%",
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          }),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                );
-                              }),
-                            ],
-                          ),
+                                }).toList(),
+                              );
+                            }),
+                          ],
                         ),
                       ),
                     );
                   },
                 );
-              }),
-
-              const SizedBox(height: 20),
-
-              /// Fun Footer
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withOpacity(0.05),
-                      AppColors.primary.withOpacity(0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildFooterItem('🌟', 'Learn'),
-                    _buildFooterItem('📝', 'Practice'),
-                    _buildFooterItem('🏆', 'Achieve'),
-                    _buildFooterItem('🎯', 'Master'),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
+              },
+            ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildFooterItem(String emoji, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TweenAnimationBuilder(
-          duration: const Duration(seconds: 2),
-          tween: Tween<double>(begin: 1, end: 1.2),
-          curve: Curves.elasticInOut,
-          builder: (context, value, child) {
-            return Transform.scale(
-              scale: value,
-              child: child,
-            );
-          },
-          child: Text(
-            emoji,
-            style: const TextStyle(fontSize: 28),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _statCard(
-      String title,
-      String value,
-      IconData icon,
-      Color color,
-      ) {
+  Widget _buildKpiCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 30,
-              color: color,
-            ),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
-            ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: AppTextStyles.h3.copyWith(
+                  color: AppColors.textDark,
+                  fontSize: 20,
+                ),
+              ),
+              Text(
+                title,
+                style: AppTextStyles.caption,
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+/// SMART COMPACT ATTEMPTS WIDGET (Limits list clutter for 100+ attempts)
+class DayAttemptsWidget extends StatefulWidget {
+  final List<dynamic> attempts;
+  final String Function(double) getStars;
+
+  const DayAttemptsWidget({
+    super.key,
+    required this.attempts,
+    required this.getStars,
+  });
+
+  @override
+  State<DayAttemptsWidget> createState() => _DayAttemptsWidgetState();
+}
+
+class _DayAttemptsWidgetState extends State<DayAttemptsWidget> {
+  bool _showAll = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.attempts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          "No test attempts recorded yet",
+          style: AppTextStyles.bodySmall,
+        ),
+      );
+    }
+
+    // Find best score
+    double maxPercentage = 0.0;
+    for (var a in widget.attempts) {
+      if (a.percentage > maxPercentage) {
+        maxPercentage = a.percentage.toDouble();
+      }
+    }
+
+    final displayAttempts =
+        _showAll ? widget.attempts : widget.attempts.take(3).toList();
+
+    return Column(
+      children: [
+        // Summary Header Strip
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Total Attempts: ${widget.attempts.length}",
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: Colors.grey.shade700,
+                  fontSize: 11,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4E8),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "Best: ${maxPercentage.toStringAsFixed(0)}% ⭐",
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: const Color(0xFFE65100),
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // List of Attempts (Max 3 by default)
+        for (var attempt in displayAttempts)
+          Container(
+            margin: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.grey.shade200,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    "${attempt.attemptNo}",
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Attempt ${attempt.attemptNo} - ${widget.getStars(attempt.percentage)}",
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        "${attempt.correctAnswers}/${attempt.totalQuestions} Questions Correct",
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: attempt.percentage >= 75
+                        ? const Color(0xFF10B981)
+                        : attempt.percentage >= 50
+                            ? const Color(0xFFF59E0B)
+                            : const Color(0xFFFF5252),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    "${attempt.percentage.toStringAsFixed(0)}%",
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: Colors.white,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Show More / Show Less Toggle Button
+        if (widget.attempts.length > 3)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showAll = !_showAll;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _showAll
+                        ? "Show Less ▴"
+                        : "View All ${widget.attempts.length} Attempts ▾",
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -1,11 +1,12 @@
-import 'package:always_victory/controller/class_controller.dart';
-import 'package:always_victory/data/app_config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../constants/app_colors.dart';
-import '../../controller/ebook_purchase_controller.dart';
-import '../../routes/app_routes.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
+import '../../controller/class_controller.dart';
+import '../../data/app_config/app_config.dart';
+import 'buy_ebook_screen.dart';
 import 'ebook_reader.dart';
 
 class PurchasedBooksTab extends StatelessWidget {
@@ -18,6 +19,7 @@ class PurchasedBooksTab extends StatelessWidget {
     return Obx(() {
       if (controller.ebooks.isEmpty) {
         return RefreshIndicator(
+          color: AppColors.primary,
           onRefresh: () async {
             await controller.loadEbooks();
             await controller.loadPurchasedBooks();
@@ -31,32 +33,26 @@ class PurchasedBooksTab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.05),
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
-                      child: const Text(
-                        '📚',
-                        style: TextStyle(fontSize: 64),
+                      child: const Icon(
+                        Icons.menu_book_rounded,
+                        size: 64,
+                        color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'No Books Available Yet',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
-                      ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No E-Books Available Yet',
+                      style: AppTextStyles.h3,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       'Check back soon for new study materials!',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: AppTextStyles.bodyMedium,
                     ),
                   ],
                 ),
@@ -67,27 +63,30 @@ class PurchasedBooksTab extends StatelessWidget {
       }
 
       return RefreshIndicator(
+        color: AppColors.primary,
         onRefresh: () async {
           await controller.loadEbooks();
           await controller.loadPurchasedBooks();
         },
         child: ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
+          physics: const BouncingScrollPhysics(),
           itemCount: controller.ebooks.length,
           itemBuilder: (context, index) {
             final ebook = controller.ebooks[index];
             final isPurchased = controller.purchasedBooks[ebook.id] ?? false;
 
             return Container(
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -98,18 +97,18 @@ class PurchasedBooksTab extends StatelessWidget {
                       left: Radius.circular(16),
                     ),
                     child: Image.network(
-                      "${AppConfig.studentImageBaseUrl}${ebook.thumbnail}",
-                      width: 100,
-                      height: 130,
+                      AppConfig.getEbookThumbnailUrl(ebook.thumbnail),
+                      width: 90,
+                      height: 120,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 100,
-                        height: 130,
-                        color: Colors.grey.shade200,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 90,
+                        height: 120,
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         child: const Icon(
-                          Icons.menu_book,
-                          size: 40,
-                          color: Colors.grey,
+                          Icons.menu_book_rounded,
+                          size: 36,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -122,12 +121,10 @@ class PurchasedBooksTab extends StatelessWidget {
                         children: [
                           Text(
                             ebook.title,
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: AppTextStyles.bodyLarge.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -135,10 +132,7 @@ class PurchasedBooksTab extends StatelessWidget {
                             ebook.description,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
+                            style: AppTextStyles.bodySmall,
                           ),
                           const SizedBox(height: 8),
                           Row(
@@ -146,8 +140,7 @@ class PurchasedBooksTab extends StatelessWidget {
                             children: [
                               Text(
                                 "₹${ebook.price}",
-                                style: const TextStyle(
-                                  fontSize: 18,
+                                style: AppTextStyles.bodyLarge.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primary,
                                 ),
@@ -157,19 +150,27 @@ class PurchasedBooksTab extends StatelessWidget {
                                   if (isPurchased) {
                                     Get.to(() => EbookReaderScreen(ebook: ebook));
                                   } else {
-                                    BuyEbookController.instance.selectedBook.value = ebook;
-                                    BuyEbookController.instance.startPayment();
+                                    Get.to(() => BuyEbookScreen(ebook: ebook));
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: isPurchased ? Colors.green : AppColors.primary,
+                                  backgroundColor: isPurchased
+                                      ? const Color(0xFF10B981)
+                                      : AppColors.primary,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                                 child: Text(
-                                  isPurchased ? "Read" : "Buy Now",
-                                  style: const TextStyle(color: Colors.white),
+                                  isPurchased ? "Read 📖" : "Buy Now 🛒",
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ],

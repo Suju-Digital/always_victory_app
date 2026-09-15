@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../constants/app_colors.dart';
 import '../../controller/question_controller.dart';
+import '../../helpers/utils.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/quiz_progress_bar.dart';
 import '../../widgets/timer_widget.dart';
@@ -116,7 +117,7 @@ class DemoQuestionScreen extends StatelessWidget {
                       onPressed: () {
 
                           if (controller.selected.value.isEmpty) {
-                            Get.snackbar("Oops 😅", "Select an answer");
+                            Utils.showWarning("Please select an answer first! ✏️");
                             return;
                           }
 

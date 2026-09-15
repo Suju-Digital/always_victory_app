@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
 
 class Utils {
   static bool _isShowing = false;
-  static bool _isSnackbarShowing = false;
+
+  // ====================== LOADING DIALOG ======================
 
   static void showLoading({String message = "Please wait..."}) {
     if (_isShowing) return;
-
     _isShowing = true;
 
     Get.dialog(
@@ -18,23 +20,35 @@ class Utils {
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                const SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    strokeWidth: 3.5,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   message,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
                   ),
                 ),
               ],
@@ -48,7 +62,6 @@ class Utils {
 
   static void hide() {
     if (!_isShowing) return;
-
     _isShowing = false;
 
     try {
@@ -56,182 +69,149 @@ class Utils {
         Get.back();
       }
     } catch (e) {
-      // Ignore if cannot close
+      // Ignore
     }
   }
 
-  static void show({
+  // ====================== ULTRA-STYLISH FLOATING SNACKBAR ======================
+
+  static void showSnackBar({
+    required String title,
     required String message,
-    bool isError = false,
-    bool isSuccess = false,
-    Duration duration = const Duration(seconds: 2),
+    required Color color,
+    IconData? icon,
+    Duration duration = const Duration(seconds: 3),
   }) {
     try {
-      // Close any existing snackbars safely
-      _closeAllSnackbars();
-
-      final color = isError
-          ? AppColors.wrong
-          : isSuccess
-          ? AppColors.correct
-          : AppColors.textDark;
-
-      final title = isError
-          ? "Error"
-          : isSuccess
-          ? "Success"
-          : "Message";
-
-      // Use ScaffoldMessenger as fallback if GetX snackbar fails
-      final context = Get.context;
-      if (context != null) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  isError ? Icons.error_outline : Icons.check_circle_outline,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        message,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: color,
-            duration: duration,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
-        );
-      } else {
-        // Fallback to GetX snackbar
-        _showGetxSnackbar(title, message, color, duration);
-      }
-    } catch (e) {
-      // Ultimate fallback - print to console
-      print("Snackbar Error: $e - Message: $message");
-    }
-  }
-
-  static void _showGetxSnackbar(String title, String message, Color color, Duration duration) {
-    try {
-      Get.snackbar(
-        title,
-        message,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: color,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
-        duration: duration,
-        forwardAnimationCurve: Curves.easeOut,
-        reverseAnimationCurve: Curves.easeIn,
-        isDismissible: true,
-        mainButton: TextButton(
-          onPressed: () {
-            try {
-              Get.closeCurrentSnackbar();
-            } catch (e) {
-              // Ignore
-            }
-          },
-          child: const Text(
-            "OK",
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-      );
-    } catch (e) {
-      // Ignore
-    }
-  }
-
-  static void _closeAllSnackbars() {
-    try {
-      // Try ScaffoldMessenger first
-      final context = Get.context;
-      if (context != null) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).clearSnackBars();
-      }
-    } catch (e) {
-      // Ignore
-    }
-
-    try {
-      // Try GetX
       if (Get.isSnackbarOpen) {
         Get.closeAllSnackbars();
       }
+
+      Get.snackbar(
+        title,
+        message,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.white,
+        colorText: AppColors.textDark,
+        titleText: Text(
+          title,
+          style: AppTextStyles.labelLarge.copyWith(
+            color: AppColors.textDark,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        messageText: Text(
+          message,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: Colors.grey.shade700,
+          ),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: color.withValues(alpha: 0.3),
+        boxShadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          margin: const EdgeInsets.only(left: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon ?? Icons.notifications_active_rounded,
+            color: color,
+            size: 20,
+          ),
+        ),
+        duration: duration,
+        forwardAnimationCurve: Curves.easeOutBack,
+        reverseAnimationCurve: Curves.easeIn,
+      );
     } catch (e) {
-      // Ignore
+      debugPrint("Snackbar error: $e");
     }
   }
 
   // ====================== HELPER METHODS ======================
 
-  static void showSuccess(String message, {Duration duration = const Duration(seconds: 2)}) {
-    show(
+  static void showSuccess(
+    String message, {
+    String title = "Success 🎉",
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showSnackBar(
+      title: title,
       message: message,
-      isSuccess: true,
+      color: const Color(0xFF10B981), // Mint Green
+      icon: Icons.check_circle_rounded,
       duration: duration,
     );
   }
 
-  static void showError(String message, {Duration duration = const Duration(seconds: 3)}) {
-    show(
+  static void showError(
+    String message, {
+    String title = "Error 😅",
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showSnackBar(
+      title: title,
       message: message,
-      isError: true,
+      color: const Color(0xFFFF5252), // Red
+      icon: Icons.error_rounded,
       duration: duration,
     );
   }
 
-  static void showInfo(String message, {Duration duration = const Duration(seconds: 2)}) {
-    show(
+  static void showInfo(
+    String message, {
+    String title = "Info ℹ️",
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showSnackBar(
+      title: title,
       message: message,
-      isSuccess: false,
-      isError: false,
+      color: const Color(0xFF3B82F6), // Blue
+      icon: Icons.info_rounded,
       duration: duration,
     );
   }
 
-  static void showWarning(String message, {Duration duration = const Duration(seconds: 3)}) {
-    show(
+  static void showWarning(
+    String message, {
+    String title = "Warning ⚠️",
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showSnackBar(
+      title: title,
       message: message,
-      isError: true,
+      color: const Color(0xFFF59E0B), // Gold
+      icon: Icons.warning_rounded,
       duration: duration,
     );
+  }
+
+  // Backward compatibility method
+  static void show({
+    required String message,
+    bool isError = false,
+    bool isSuccess = false,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    if (isError) {
+      showError(message, duration: duration);
+    } else if (isSuccess) {
+      showSuccess(message, duration: duration);
+    } else {
+      showInfo(message, duration: duration);
+    }
   }
 
   // ====================== DIALOG METHODS ======================
@@ -241,20 +221,20 @@ class Utils {
     required String message,
     String confirmText = "Yes",
     String cancelText = "No",
-    Color confirmColor = Colors.red,
+    Color confirmColor = AppColors.primary,
   }) async {
     try {
       return await Get.dialog<bool>(
         AlertDialog(
-          title: Text(title),
-          content: Text(message),
+          title: Text(title, style: AppTextStyles.h3),
+          content: Text(message, style: AppTextStyles.bodyMedium),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
           actions: [
             TextButton(
               onPressed: () => Get.back(result: false),
-              child: Text(cancelText),
+              child: Text(cancelText, style: AppTextStyles.labelMedium),
             ),
             ElevatedButton(
               onPressed: () => Get.back(result: true),
@@ -262,10 +242,10 @@ class Utils {
                 backgroundColor: confirmColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: Text(confirmText),
+              child: Text(confirmText, style: AppTextStyles.button),
             ),
           ],
         ),
@@ -275,114 +255,7 @@ class Utils {
     }
   }
 
-  static void showCustomDialog({
-    required String title,
-    required String message,
-    String buttonText = "OK",
-    VoidCallback? onPressed,
-    IconData? icon,
-    Color? iconColor,
-  }) {
-    try {
-      Get.dialog(
-        AlertDialog(
-          title: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, color: iconColor ?? Colors.blue, size: 30),
-                const SizedBox(width: 12),
-              ],
-              Text(title),
-            ],
-          ),
-          content: Text(message),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                if (onPressed != null) onPressed();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(buttonText),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      // Ignore
-    }
-  }
-
-  // ====================== TOAST METHODS ======================
-
-  static void showToast(String message, {Duration duration = const Duration(seconds: 2)}) {
-    show(
-      message: message,
-      duration: duration,
-    );
-  }
-
-  // ====================== LOADING WITH OVERLAY ======================
-
-  static void showLoadingOverlay({String message = "Loading..."}) {
-    if (_isShowing) return;
-    _isShowing = true;
-
-    Get.dialog(
-      PopScope(
-        canPop: false,
-        child: Container(
-          color: Colors.black.withOpacity(0.5),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
-                      strokeWidth: 4,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    message,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
-
-  static void hideLoadingOverlay() {
-    hide();
-  }
-
-  // ====================== UTILITY METHODS ======================
+  // ====================== UTILITY & FORMATTING ======================
 
   static bool isShowingDialog() {
     return Get.isDialogOpen ?? false;
@@ -395,54 +268,19 @@ class Utils {
   static void dismissAll() {
     try {
       hide();
-      _closeAllSnackbars();
+      if (Get.isSnackbarOpen) {
+        Get.closeAllSnackbars();
+      }
     } catch (e) {
       // Ignore
     }
   }
 
-  // ====================== FORMATTING METHODS ======================
-
   static String formatDate(DateTime date) {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  static String formatTime(DateTime date) {
-    return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
-  }
-
-  static String formatDateTime(DateTime date) {
-    return "${formatDate(date)} ${formatTime(date)}";
-  }
-
   static String formatCurrency(double amount) {
     return "₹${amount.toStringAsFixed(2)}";
-  }
-
-  static String formatNumber(int number) {
-    if (number >= 1000000) {
-      return "${(number / 1000000).toStringAsFixed(1)}M";
-    } else if (number >= 1000) {
-      return "${(number / 1000).toStringAsFixed(1)}K";
-    }
-    return number.toString();
-  }
-
-  // ====================== VALIDATION METHODS ======================
-
-  static bool isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
-
-  static bool isValidMobile(String mobile) {
-    return RegExp(r'^[0-9]{10}$').hasMatch(mobile);
-  }
-
-  static bool isValidName(String name) {
-    return RegExp(r'^[a-zA-Z\s]{2,50}$').hasMatch(name);
-  }
-
-  static bool isValidPassword(String password) {
-    return password.length >= 6;
   }
 }

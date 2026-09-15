@@ -1,8 +1,10 @@
-import 'package:always_victory/constants/app_colors.dart';
-import 'package:always_victory/controller/days_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
+import '../../controller/days_controller.dart';
 
 class ContactUsScreen extends StatelessWidget {
   ContactUsScreen({super.key});
@@ -12,21 +14,22 @@ class ContactUsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF8FAFC),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Contact Us",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: AppColors.primary,
+        elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.appGradient,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
       ),
@@ -35,73 +38,76 @@ class ContactUsScreen extends StatelessWidget {
 
         if (about == null) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(color: AppColors.primary),
           );
         }
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
           child: Column(
             children: [
+              const SizedBox(height: 8),
+
               _buildContactCard(
                 icon: Icons.alternate_email_rounded,
                 title: "Email Address",
                 value: about.email,
-                color: Colors.blue,
+                color: const Color(0xFF3B82F6), // Blue
               ),
               _buildContactCard(
                 icon: Icons.phone_in_talk_rounded,
                 title: "Phone Number",
                 value: about.contact,
-                color: Colors.green,
+                color: const Color(0xFF10B981), // Green
               ),
               _buildContactCard(
                 icon: Icons.location_on_rounded,
                 title: "Our Office",
                 value: about.address,
-                color: Colors.red,
+                color: const Color(0xFFFF5252), // Red
               ),
               if (about.website.isNotEmpty)
                 _buildContactCard(
                   icon: Icons.public_rounded,
                   title: "Official Website",
                   value: about.website,
-                  color: Colors.orange,
+                  color: const Color(0xFFF59E0B), // Amber
                 ),
+
               const SizedBox(height: 12),
+
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                  color: AppColors.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       "We are here to help! 👋",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      style: AppTextStyles.h3.copyWith(
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       about.companyDetail,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textGrey.withOpacity(0.8),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.grey.shade800,
                         height: 1.5,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
             ],
           ),
         );
@@ -116,42 +122,37 @@ class ContactUsScreen extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: color, size: 24),
+          child: Icon(icon, color: color, size: 20),
         ),
         title: Text(
           title,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textGrey.withOpacity(0.6),
-            letterSpacing: 0.5,
-          ),
+          style: AppTextStyles.caption,
         ),
         subtitle: Text(
           value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+          style: AppTextStyles.bodyLarge.copyWith(
+            fontWeight: FontWeight.bold,
             color: AppColors.textDark,
           ),
         ),

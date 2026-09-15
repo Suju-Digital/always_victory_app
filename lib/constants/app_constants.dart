@@ -23,26 +23,30 @@ class AppConstants {
   static const int optionAnimDuration     = 200;
   static const int timerWarningAt         = 10;   // seconds remaining
 
-  // Padding
+  // UI Standard Paddings
   static const double paddingXS   = 4.0;
   static const double paddingSM   = 8.0;
   static const double paddingMD   = 16.0;
-  static const double paddingLG   = 24.0;
-  static const double paddingXL   = 32.0;
-  static const double paddingXXL  = 48.0;
+  static const double paddingLG   = 20.0;
+  static const double paddingXL   = 24.0;
+  static const double paddingXXL  = 32.0;
 
-  // Border Radius
+  // Standard Border Radiuses (for bubbly kid-friendly UI)
   static const double radiusSM    = 8.0;
-  static const double radiusMD    = 12.0;
-  static const double radiusLG    = 16.0;
-  static const double radiusXL    = 24.0;
+  static const double radiusMD    = 16.0;
+  static const double radiusLG    = 24.0;
+  static const double radiusXL    = 32.0;
   static const double radiusRound = 100.0;
 
-  // Icon Sizes
+  // Standard Icon Sizes
   static const double iconSM      = 16.0;
   static const double iconMD      = 24.0;
   static const double iconLG      = 32.0;
   static const double iconXL      = 48.0;
+
+  // Standard Shadows (Offset and Blur)
+  static const double shadowBlurNormal = 12.0;
+  static const double shadowBlurHeavy  = 20.0;
 
   // SharedPreferences Keys
   static const String keyDarkMode      = 'dark_mode';

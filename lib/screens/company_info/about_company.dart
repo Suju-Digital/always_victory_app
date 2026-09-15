@@ -1,32 +1,36 @@
-import 'package:always_victory/constants/app_colors.dart';
-import 'package:always_victory/data/app_config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
 import '../../controller/days_controller.dart';
+import '../../data/app_config/app_config.dart';
 
 class AboutCompanyScreen extends StatelessWidget {
-   AboutCompanyScreen({super.key});
+  AboutCompanyScreen({super.key});
+
   final DayController controller = Get.find<DayController>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF8FAFC),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "About Company",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: AppColors.primary,
+        elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.appGradient,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
       ),
@@ -36,16 +40,19 @@ class AboutCompanyScreen extends StatelessWidget {
           await controller.loadAbout();
         },
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
           child: Obx(
             () {
               final about = controller.aboutData.value;
+
               if (about == null) {
                 return SizedBox(
                   height: MediaQuery.of(context).size.height * 0.7,
                   child: const Center(
-                    child: CircularProgressIndicator(),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                 );
               }
@@ -53,97 +60,118 @@ class AboutCompanyScreen extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Banner Image
                   Container(
                     width: double.infinity,
-                    height: 220,
+                    height: 200,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
-                      image: DecorationImage(
-                        image: NetworkImage("${AppConfig.carsouleImageBaseUrl}${about.aboutImage}"),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.network(
+                        AppConfig.getImageUrl(
+                          AppConfig.carsouleImageBaseUrl,
+                          about.aboutImage,
+                        ),
                         fit: BoxFit.cover,
-                        onError: (exception, stackTrace) {
-                          debugPrint(exception.toString());
-                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          child: const Icon(
+                            Icons.business_rounded,
+                            size: 60,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+
+                  const SizedBox(height: 20),
+
+                  // Company Title
                   Text(
                     about.companyName,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textDark,
-                      letterSpacing: -0.5,
-                    ),
+                    style: AppTextStyles.h2,
                   ),
-                  const SizedBox(height: 12),
+
+                  const SizedBox(height: 8),
+
+                  // Company Details Card
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Text(
                       about.companyDetail,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textGrey.withOpacity(0.9),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: const Color(0xFF1E293B),
+                        fontSize: 14,
                         height: 1.6,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+
+                  const SizedBox(height: 20),
+
+                  // Mission Row
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.rocket_launch_rounded, color: AppColors.primary, size: 20),
+                        child: const Icon(
+                          Icons.rocket_launch_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         "Our Mission",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
-                        ),
+                        style: AppTextStyles.h3,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+
+                  const SizedBox(height: 10),
+
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                      ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "To make quality education accessible and engaging for every student through interactive technology and premium content.",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textDark,
-                        height: 1.6,
+                      style: AppTextStyles.bodyMedium.copyWith(
                         fontStyle: FontStyle.italic,
+                        color: AppColors.textDark,
+                        fontSize: 13.5,
+                        height: 1.5,
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 32),
                 ],
               );

@@ -1,12 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../constants/app_colors.dart';
+import '../../constants/app_text_styles.dart';
 import '../../controller/buy_course_controller.dart';
 import '../../data/app_config/app_config.dart';
-import '../../widgets/custom_button.dart';
+import '../../models/class_model.dart';
 
 class BuyClassScreen extends StatefulWidget {
   const BuyClassScreen({super.key});
@@ -18,30 +18,77 @@ class BuyClassScreen extends StatefulWidget {
 class _BuyClassScreenState extends State<BuyClassScreen> {
   final BuyCourseController controller = Get.find<BuyCourseController>();
 
-  // Sample video URLs - Replace with your actual video URLs
-  final List<Map<String, String>> demoVideos = [
-    {
-      'url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      'embedUrl': 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      'title': 'Introduction',
-      'duration': '5:30',
-      'type': 'youtube'
-    },
-    {
-      'url': 'https://www.youtube.com/watch?v=tgbNymZ7vqY',
-      'embedUrl': 'https://www.youtube.com/embed/tgbNymZ7vqY',
-      'title': 'Advanced Concepts',
-      'duration': '8:15',
-      'type': 'youtube'
-    },
-    {
-      'url': 'https://www.youtube.com/watch?v=9bZkp7q19f0',
-      'embedUrl': 'https://www.youtube.com/embed/9bZkp7q19f0',
-      'title': 'Practice Session',
-      'duration': '6:45',
-      'type': 'youtube'
-    },
-  ];
+  Timer? _timer;
+  Duration _timeLeft = Duration.zero;
+  bool _timerInitialized = false;
+
+  void _initDynamicTimer(ClassModel item) {
+    if (_timerInitialized) return;
+    _timerInitialized = true;
+
+    final now = DateTime.now();
+
+    // 1. Try parsing offer_ends_at / expiryDate from Database (e.g. "2026-09-16 10:46:32")
+    final rawExpiry = item.expiryDate?.trim();
+    if (rawExpiry != null &&
+        rawExpiry.isNotEmpty &&
+        rawExpiry.toUpperCase() != 'NULL') {
+      try {
+        final parsedExpiry = DateTime.parse(rawExpiry);
+        if (parsedExpiry.isAfter(now)) {
+          _timeLeft = parsedExpiry.difference(now);
+          _startTimer();
+          return;
+        }
+      } catch (e) {
+        debugPrint("Expiry date parse error: $e");
+      }
+    }
+
+    // 2. Try offerHours from Database if offer_ends_at was null
+    if (item.offerHours != null && item.offerHours! > 0) {
+      _timeLeft = Duration(hours: item.offerHours!);
+      _startTimer();
+      return;
+    }
+
+    // 3. If DB did NOT specify any expiry_date or offer_hours, DO NOT start any timer!
+    _timer?.cancel();
+    _timeLeft = Duration.zero;
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timeLeft.inSeconds > 0) {
+        if (mounted) {
+          setState(() {
+            _timeLeft -= const Duration(seconds: 1);
+          });
+        }
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String get _formattedTime {
+    if (_timeLeft.inSeconds <= 0) return "00h 00m 00s";
+
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+    final totalHours = twoDigits(_timeLeft.inHours);
+    final minutes = twoDigits(_timeLeft.inMinutes.remainder(60));
+    final seconds = twoDigits(_timeLeft.inSeconds.remainder(60));
+
+    return "${totalHours}h ${minutes}m ${seconds}s";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,585 +97,349 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
 
       if (item == null) {
         return const Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('😅', style: TextStyle(fontSize: 60)),
-                SizedBox(height: 16),
-                Text(
-                  "No Class Selected",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          body: Center(child: CircularProgressIndicator()),
         );
       }
 
+      // Initialize dynamic timer strictly if DB timer fields exist
+      _initDynamicTimer(item);
+
       final double originalPrice =
           double.tryParse(item.originalPrice.toString()) ?? 0;
-
       final double finalPrice =
           double.tryParse(item.finalPrice.toString()) ?? 0;
 
-      final double saving = originalPrice - finalPrice;
+      final rawExpiry = item.expiryDate?.trim();
+      final bool hasDbTimer = ((rawExpiry != null &&
+                  rawExpiry.isNotEmpty &&
+                  rawExpiry.toUpperCase() != 'NULL') ||
+              (item.offerHours != null && item.offerHours! > 0)) &&
+          _timeLeft.inSeconds > 0;
+
+      final bool hasDiscount = originalPrice > finalPrice || item.discountPercent > 0;
 
       return Scaffold(
-        backgroundColor: const Color(0xffF5F7FB),
-        body: CustomScrollView(
-          slivers: [
-            /// HEADER with Playful Design
-            SliverAppBar(
-              expandedHeight: 300,
-              pinned: true,
-              elevation: 0,
-              backgroundColor: AppColors.primary,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                onPressed: () => Get.back(),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.network(
-                      "${AppConfig.studentImageBaseUrl}${item.posterImage}",
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.primary.withOpacity(0.1),
-                          child: const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: AppColors.primary,
-                              size: 50,
-                            ),
-                          ),
-                        );
-                      },
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          title: Text(
+            "Course Overview",
+            style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
+          ),
+          backgroundColor: AppColors.primary,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () => Get.back(),
+          ),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: AppColors.appGradient,
+            ),
+          ),
+        ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// 1. FULL-WIDTH CLEAR HERO COURSE POSTER FRAME
+                  Container(
+                    width: double.infinity,
+                    height: 260,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    Container(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.network(
+                        AppConfig.getClassPosterUrl(item.posterImage),
+                        width: double.infinity,
+                        height: 260,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.network(
+                            AppConfig.getImageUrl(
+                              AppConfig.imageBaseUrl,
+                              item.posterImage,
+                            ),
+                            width: double.infinity,
+                            height: 260,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.school_rounded,
+                                    color: AppColors.primary,
+                                    size: 60,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "COURSE POSTER",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// 2. TITLE & CATEGORY BADGE
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.6),
-                          ],
-                        ),
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(100),
                       ),
-                    ),
-                    Positioned(
-                      top: 60,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.wrong,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.wrong.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('🔥', style: TextStyle(fontSize: 16)),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${item.discountPercent}% OFF',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 20,
-                      left: 16,
-                      right: 16,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '📚 ${item.title}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(0, 2),
-                                  blurRadius: 4,
-                                  color: Colors.black26,
-                                ),
-                              ],
-                            ),
+                          const Icon(
+                            Icons.verified_rounded,
+                            color: AppColors.primary,
+                            size: 14,
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Text(
-                                '👨‍🏫',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                item.className.isNotEmpty ? item.className : 'Expert Course',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 4),
+                          Text(
+                            item.className.toUpperCase(),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primary,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Center(
+                    child: Text(
+                      item.title,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.h2.copyWith(
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// 3. DESCRIPTION CARD
+                  Text(
+                    "About This Course 📖",
+                    style: AppTextStyles.h4,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      item.description.isNotEmpty
+                          ? item.description
+                          : "Comprehensive chapter-wise study guide with solved MCQs, key concepts, and revision notes.",
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.grey.shade800,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// 4. KEY HIGHLIGHTS
+                  Text(
+                    "What's Included 🎯",
+                    style: AppTextStyles.h4,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildHighlightRow("📱", "Daily Interactive MCQ Practice"),
+                  _buildHighlightRow("⚡", "Chapter-wise Tests & Solutions"),
+                  _buildHighlightRow("🔒", "Instant Course Unlock & Progress Tracking"),
+                  _buildHighlightRow("🏆", "Rankings & Star Rewards"),
+                ],
               ),
             ),
 
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    /// STATS
-                    TweenAnimationBuilder(
-                      duration: const Duration(milliseconds: 600),
-                      tween: Tween<double>(begin: 0, end: 1),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: child,
-                          ),
-                        );
-                      },
+            /// 5. BOTTOM STICKY PRICE & PURCHASE BAR WITH CONDITIONAL TIMER
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Countdown Timer Strip ONLY IF timer data exists in Database!
+                  if (hasDbTimer)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFF3CD),
+                        border: Border(
+                          top: BorderSide(color: Color(0xFFFFE082), width: 1),
+                        ),
+                      ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: _infoCard(
-                              icon: Icons.people_alt_outlined,
-                              value: controller.enrollStudents.toString(),
-                              label: "Students",
-                              emoji: '👥',
+                          Text(
+                            "Limited Discount Ends in: ",
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _infoCard(
-                              icon: Icons.discount_outlined,
-                              value: "${item.discountPercent}%",
-                              label: "Discount",
-                              emoji: '🎯',
+                          Text(
+                            _formattedTime,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: const Color(0xFFD84315),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.0,
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-
-                    /// PRICE CARD
-                    TweenAnimationBuilder(
-                      duration: const Duration(milliseconds: 800),
-                      tween: Tween<double>(begin: 0, end: 1),
-                      curve: Curves.easeOutBack,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: Transform.scale(
-                            scale: 0.9 + (0.1 * value),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: AppColors.appGradient,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Text(
-                                  '💰',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  "Special Offer Price",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "₹${item.finalPrice}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  "₹${item.originalPrice}",
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.6),
-                                    decoration: TextDecoration.lineThrough,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.4),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        '🎉',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "Save ₹${saving.toStringAsFixed(0)}",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('💎', style: TextStyle(fontSize: 14)),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Best Value Learning Kit',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  // Action Price Bar
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF5227),
                     ),
-
-                    const SizedBox(height: 24),
-
-                    /// COURSE DETAILS
-                    TweenAnimationBuilder(
-                      duration: const Duration(milliseconds: 1000),
-                      tween: Tween<double>(begin: 0, end: 1),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(.04),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
                         ),
                         child: Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 28,
-                              backgroundColor: Color(0xffFFF7ED),
-                              child: Icon(
-                                Icons.school_rounded,
-                                color: AppColors.primary,
-                                size: 30,
-                              ),
-                            ),
-                            const SizedBox(width: 15),
+                            // Price Info
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    item.title,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 18,
-                                      color: AppColors.textDark,
+                                  if (originalPrice > finalPrice)
+                                    Text(
+                                      "₹$originalPrice",
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: Colors.white70,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        '📖',
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "Class : ${item.className}",
-                                        style: TextStyle(
-                                          color: AppColors.textGrey.withOpacity(0.8),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          "₹$finalPrice",
+                                          style: AppTextStyles.h2.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.w900,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 8),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              hasDiscount ? "Only Today" : "Best Price",
+                                              style: AppTextStyles.caption.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                            Text(
+                                              "${controller.enrollStudents} Enrolled",
+                                              style: AppTextStyles.caption.copyWith(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.9),
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.correct.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.verified_user_rounded,
-                                color: AppColors.correct,
-                                size: 20,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 24),
+                            const SizedBox(width: 12),
 
-                    /// DESCRIPTION
-                    TweenAnimationBuilder(
-                      duration: const Duration(milliseconds: 1200),
-                      tween: Tween<double>(begin: 0, end: 1),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: child,
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(.05),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Text('📝', style: TextStyle(fontSize: 24)),
-                                SizedBox(width: 8),
-                                Text(
-                                  "Course Description",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.textDark,
-                                  ),
+                            // Enroll Now Button
+                            ElevatedButton(
+                              onPressed: controller.startPayment,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFFFF5227),
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 12,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              item.description,
-                              style: TextStyle(
-                                color: AppColors.textGrey.withOpacity(0.9),
-                                fontSize: 15,
-                                height: 1.6,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Wrap(
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: [
-                                _buildFeatureTag('🎯', 'Interactive'),
-                                _buildFeatureTag('📹', 'Video Lessons'),
-                                _buildFeatureTag('📝', 'Quizzes'),
-                                _buildFeatureTag('🏆', 'Certificates'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    /// 🎬 VIDEO CAROUSEL
-                    TweenAnimationBuilder(
-                      duration: const Duration(milliseconds: 1400),
-                      tween: Tween<double>(begin: 0, end: 1),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value.clamp(0.0, 1.0),
-                          child: child,
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(.05),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Text('🎬', style: TextStyle(fontSize: 24)),
-                                SizedBox(width: 8),
-                                Text(
-                                  "Sample Videos",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.textDark,
-                                  ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                Spacer(),
-                                Text(
-                                  'Swipe ▶',
-                                  style: TextStyle(
-                                    color: AppColors.textGrey,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              height: 220,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: demoVideos.length,
-                                itemBuilder: (context, index) {
-                                  return _buildVideoCard(demoVideos[index]);
-                                },
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(
-                                demoVideos.length,
-                                (index) => Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: index == 0
-                                        ? AppColors.primary
-                                        : AppColors.border,
-                                  ),
+                              child: Text(
+                                "Enroll Now",
+                                style: AppTextStyles.button.copyWith(
+                                  color: const Color(0xFFFF5227),
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
@@ -636,562 +447,41 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                         ),
                       ),
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
 
-                    const SizedBox(height: 120),
-                  ],
+  Widget _buildHighlightRow(String emoji, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ),
           ],
         ),
-
-        /// BOTTOM BUTTON
-        bottomNavigationBar: TweenAnimationBuilder(
-          duration: const Duration(milliseconds: 500),
-          tween: Tween<double>(begin: 0, end: 1),
-          curve: Curves.easeOutBack,
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(0, 50 * (1 - value)),
-              child: Opacity(
-                opacity: value.clamp(0.0, 1.0),
-                child: child,
-              ),
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, -6),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: CustomButton(
-                text: "Unlock Complete Course",
-                onPressed: controller.startPayment,
-                isLoading: false,
-                icon: Icons.bolt_rounded,
-              ),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildVideoCard(Map<String, String> video) {
-    return GestureDetector(
-      onTap: () {
-        _playVideo(video);
-      },
-      child: Container(
-        width: 300,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.grey.shade100,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              // Video Thumbnail with Gradient
-              Container(
-                height: 220,
-                decoration: const BoxDecoration(
-                  gradient: AppColors.appGradient,
-                ),
-                child: const Center(
-                  child: Text(
-                    '📹',
-                    style: TextStyle(fontSize: 60),
-                  ),
-                ),
-              ),
-
-              // Play Button Overlay
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.center,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.3),
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: AppColors.primary,
-                        size: 40,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Video Duration Badge
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    video['duration'] ?? '2:30',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Topic Label
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '📹 ${video['title']}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _playVideo(Map<String, String> video) async {
-    final url = video['url']!;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.7,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  '🎬 Play Video',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    physics: const ClampingScrollPhysics(),
-                    children: [
-                      _buildOptionTile(
-                        icon: Icons.play_arrow,
-                        title: 'Watch in YouTube App',
-                        subtitle: 'Open in YouTube app (if installed)',
-                        color: Colors.red.shade700,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _launchYouTubeApp(url);
-                        },
-                      ),
-                      const Divider(height: 30),
-                      _buildOptionTile(
-                        icon: Icons.open_in_browser,
-                        title: 'Watch in Browser',
-                        subtitle: 'Open in web browser',
-                        color: Colors.blue.shade700,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _launchBrowser(url);
-                        },
-                      ),
-                      const Divider(height: 30),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade200,
-                          foregroundColor: Colors.grey.shade700,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOptionTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: color, size: 28),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 13,
-        ),
-      ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-      onTap: onTap,
-    );
-  }
-
-  Future<void> _launchYouTubeApp(String url) async {
-    try {
-      final youtubeUrl = url.replaceFirst('watch?v=', 'watch?v=');
-      final Uri uri = Uri.parse(youtubeUrl);
-
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        await _launchBrowser(url);
-      }
-    } catch (e) {
-      await _launchBrowser(url);
-    }
-  }
-
-  Future<void> _launchBrowser(String url) async {
-    try {
-      final Uri uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        Get.snackbar(
-          'Error',
-          'Could not open video. Please try again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Could not open video. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-      );
-    }
-  }
-
-  Widget _buildFeatureTag(String emoji, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.15),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required String emoji,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 32)),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: AppColors.textGrey.withOpacity(0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Video Player Screen with WebView
-class VideoPlayerScreen extends StatefulWidget {
-  final String videoUrl;
-  final String videoTitle;
-
-  const VideoPlayerScreen({
-    super.key,
-    required this.videoUrl,
-    required this.videoTitle,
-  });
-
-  @override
-  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
-}
-
-class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late WebViewController _controller;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeWebView();
-    });
-  }
-
-  void _initializeWebView() {
-    try {
-      _controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(const Color(0x00000000))
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onProgress: (int progress) {
-              if (progress == 100) {
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            },
-            onPageStarted: (String url) {
-              setState(() {
-                _isLoading = true;
-              });
-            },
-            onPageFinished: (String url) {
-              setState(() {
-                _isLoading = false;
-              });
-            },
-            onWebResourceError: (WebResourceError error) {
-              setState(() {
-                _isLoading = false;
-              });
-              Get.snackbar(
-                'Error',
-                'Failed to load video. Please try again.',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red.shade100,
-              );
-            },
-          ),
-        )
-        ..loadRequest(Uri.parse(widget.videoUrl));
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      Get.snackbar(
-        'Error',
-        'Failed to initialize video player.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          widget.videoTitle,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.white),
-            onPressed: () {
-              Get.snackbar(
-                'Share',
-                'Share this video with your friends! 📤',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: AppColors.primary,
-                colorText: Colors.white,
-              );
-            },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(
-            controller: _controller,
-          ),
-          if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.7),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
-                      ),
-                      strokeWidth: 4,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Loading Video... 🎬',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }

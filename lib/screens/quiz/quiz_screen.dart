@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../constants/app_colors.dart';
 import '../../controller/question_controller.dart';
+import '../../helpers/utils.dart';
 import '../../models/question_model.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/timer_widget.dart';
@@ -569,26 +570,14 @@ class _QuizScreenState extends State<QuizScreen> {
                           // Validate based on question type
                           if (question.questionTypeId == 1) {
                             if (controller.selected.value.isEmpty) {
-                              Get.snackbar(
-                                "Oops 😅",
-                                "Select an answer",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.red.shade100,
-                                colorText: Colors.red.shade900,
-                              );
+                              Utils.showWarning("Please select an answer first! ✏️");
                               return;
                             }
                           } else {
                             // text answer
                             controller.selectAnswer(textController.text);
                             if (textController.text.isEmpty) {
-                              Get.snackbar(
-                                "Oops 😅",
-                                "Write your answer",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.red.shade100,
-                                colorText: Colors.red.shade900,
-                              );
+                              Utils.showWarning("Please write your answer! ✏️");
                               return;
                             }
                           }

@@ -1,8 +1,8 @@
 import 'package:always_victory/data/app_config/app_config.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
 import '../models/class_model.dart';
 
 class ClassCard extends StatelessWidget {
@@ -34,7 +34,7 @@ class ClassCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -60,7 +60,7 @@ class ClassCard extends StatelessWidget {
                       errorBuilder: (_, __, ___) => Container(
                         height: 80,
                         width: 85,
-                        color: AppColors.primary.withOpacity(0.08),
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         child: const Icon(
                           Icons.school_rounded,
                           color: AppColors.primary,
@@ -73,7 +73,7 @@ class ClassCard extends StatelessWidget {
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -101,14 +101,12 @@ class ClassCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         data.className,
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                        style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.primary,
                         ),
                       ),
@@ -121,10 +119,8 @@ class ClassCard extends StatelessWidget {
                       data.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
+                      style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
                       ),
                     ),
 
@@ -135,10 +131,7 @@ class ClassCard extends StatelessWidget {
                       data.description,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: AppTextStyles.bodySmall,
                     ),
 
                     const SizedBox(height: 8),
@@ -148,18 +141,15 @@ class ClassCard extends StatelessWidget {
                       children: [
                         Text(
                           "₹${data.finalPrice}",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
+                          style: AppTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
                           ),
                         ),
                         if (data.originalPrice > data.finalPrice) ...[
                           const SizedBox(width: 6),
                           Text(
                             "₹${data.originalPrice}",
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
+                            style: AppTextStyles.bodySmall.copyWith(
                               color: Colors.grey.shade400,
                               decoration: TextDecoration.lineThrough,
                             ),
@@ -183,10 +173,9 @@ class ClassCard extends StatelessWidget {
                             isLocked
                                 ? "Unlock 🔒"
                                 : (progress > 0 ? "Resume ⚡" : "Start ▶"),
-                            style: GoogleFonts.poppins(
+                            style: AppTextStyles.labelSmall.copyWith(
                               color: Colors.white,
                               fontSize: 11,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),

@@ -1,12 +1,11 @@
 import 'package:always_victory/constants/app_strings.dart';
 import 'package:always_victory/controller/class_controller.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
-import '../constants/app_colors.dart';
 import '../data/api_services/api_service.dart';
 import '../data/app_config/app_config.dart';
+import '../helpers/utils.dart';
 import '../models/ebook_model.dart';
 
 class BuyEbookController extends GetxController {
@@ -48,7 +47,11 @@ class BuyEbookController extends GetxController {
       'description': selectedBook.value!.title,
     };
 
-    razorpay.open(options);
+    try {
+      razorpay.open(options);
+    } catch (e) {
+      Utils.showError(e.toString());
+    }
   }
 
   Future<void> handlePaymentSuccess(
@@ -61,17 +64,16 @@ class BuyEbookController extends GetxController {
     );
     await ClassController.instance.loadPurchasedBooks();
 
-    Get.snackbar(
-      "Success",
-      "Book Purchased Successfully",
-      backgroundColor: AppColors.correct,
-      colorText: Colors.white,
-    );
+    Utils.showSuccess("Book Purchased Successfully 📚🎉");
   }
 
-  void handlePaymentError(PaymentFailureResponse response) {}
+  void handlePaymentError(PaymentFailureResponse response) {
+    Utils.showError(response.message ?? 'Payment Failed 😅');
+  }
 
-  void handleExternalWallet(ExternalWalletResponse response) {}
+  void handleExternalWallet(ExternalWalletResponse response) {
+    Utils.showInfo(response.walletName ?? 'Wallet');
+  }
 
   @override
   void onClose() {

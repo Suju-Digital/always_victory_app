@@ -8,15 +8,19 @@ class AppCarousel<T> extends StatefulWidget {
   final double height;
   final bool autoPlay;
   final Duration autoPlayDuration;
+  final Duration autoPlayAnimationDuration;
+  final Curve scrollCurve;
   final bool showIndicator;
 
   const AppCarousel({
     super.key,
     required this.items,
     required this.itemBuilder,
-    this.height = 200,
+    this.height = 155,
     this.autoPlay = true,
     this.autoPlayDuration = const Duration(seconds: 4),
+    this.autoPlayAnimationDuration = const Duration(milliseconds: 800),
+    this.scrollCurve = Curves.fastOutSlowIn,
     this.showIndicator = true,
   });
 
@@ -46,9 +50,11 @@ class _AppCarouselState<T> extends State<AppCarousel<T>> {
             height: widget.height,
             autoPlay: widget.autoPlay,
             autoPlayInterval: widget.autoPlayDuration,
-            viewportFraction: 0.92,
+            autoPlayAnimationDuration: widget.autoPlayAnimationDuration,
+            autoPlayCurve: widget.scrollCurve,
+            viewportFraction: 0.90,
             enlargeCenterPage: true,
-            enlargeStrategy: CenterPageEnlargeStrategy.scale,
+            enlargeFactor: 0.15,
             onPageChanged: (index, reason) {
               setState(() {
                 currentIndex = index;
@@ -56,36 +62,39 @@ class _AppCarouselState<T> extends State<AppCarousel<T>> {
             },
           ),
         ),
+
+        // Indicator Dots overlay
         if (widget.showIndicator)
           Positioned(
-            bottom: 12,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                widget.items.length,
-                (index) {
-                  final isActive = index == currentIndex;
+            bottom: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  widget.items.length,
+                  (index) {
+                    final isActive = index == currentIndex;
 
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: isActive ? 24 : 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        if (isActive)
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                          ),
-                      ],
-                    ),
-                  );
-                },
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: isActive ? 18 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),

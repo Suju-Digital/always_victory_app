@@ -1,13 +1,12 @@
-import 'package:always_victory/constants/app_colors.dart';
-import 'package:always_victory/controller/auth_controller.dart';
-import 'package:always_victory/data/app_config/app_config.dart';
-import 'package:always_victory/helpers/debug_loger.dart';
-import 'package:always_victory/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
 
+import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
+import '../../controller/auth_controller.dart';
+import '../../data/app_config/app_config.dart';
+import '../../routes/app_routes.dart';
 
 class StudentProfileInfoScreen extends StatelessWidget {
   const StudentProfileInfoScreen({super.key});
@@ -15,80 +14,93 @@ class StudentProfileInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<AuthController>();
-    AppLog.response(controller.student.toJson());
+
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
-
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-      title: const Text("My Profile",style: TextStyle(color: Colors.white),),
-      centerTitle: true,
-      backgroundColor: AppColors.primary,
-      automaticallyImplyLeading: false,
-    ),
-
+        title: Text(
+          "My Profile Info",
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.appGradient,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(AppConstants.paddingMD),
         child: Column(
           children: [
-
-            /// Profile Card
+            /// 1. Profile Avatar Header Card
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                borderRadius:
-                BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20),
                 gradient: AppColors.appGradient,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
               child: Column(
-                children:  [
-
+                children: [
                   Obx(() {
                     final student = controller.student.value;
-                    print("student image  :${AppConfig.studentProfileImageBaseUrl}${student.photo??""}");
                     return CircleAvatar(
-
-                      radius: 50,
+                      radius: 42,
                       backgroundColor: Colors.white,
-                      backgroundImage:
-                      student.photo != null &&
-                          student.photo!.isNotEmpty
-                          ? NetworkImage("${AppConfig.studentProfileImageBaseUrl}${student.photo??""}")
+                      backgroundImage: student.photo != null &&
+                              student.photo!.isNotEmpty
+                          ? NetworkImage(
+                              "${AppConfig.studentProfileImageBaseUrl}${student.photo}")
                           : null,
-                      child:
-                      student.photo == null ||
-                          student.photo!.isEmpty
+                      child: student.photo == null || student.photo!.isEmpty
                           ? const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Colors.blue,
-                      )
+                              Icons.person_rounded,
+                              size: 48,
+                              color: AppColors.primary,
+                            )
                           : null,
                     );
                   }),
-
-                  SizedBox(height: 15),
-
+                  const SizedBox(height: 12),
                   Obx(
-                    ()=> Text(
-                      controller.student.value.name??"",
-                      style: TextStyle(
+                    () => Text(
+                      controller.student.value.name ?? "Student Name",
+                      style: AppTextStyles.h3.copyWith(
                         color: Colors.white,
-                        fontSize: 24,
-                        fontWeight:
-                        FontWeight.bold,
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 5),
-
+                  const SizedBox(height: 4),
                   Obx(
-                    ()=> Text(
-                      "Class ${controller.student.value.className}",
-                      style: TextStyle(
-                        color:
-                        Colors.white70,
+                    () => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "Class ${controller.student.value.className ?? ''}",
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -98,90 +110,88 @@ class StudentProfileInfoScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            /// Information Card
-            Card(
-              shape:
-              RoundedRectangleBorder(
-                borderRadius:
-                BorderRadius.circular(
-                    20),
+            /// 2. Student Details Info Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Padding(
-                padding:
-                const EdgeInsets.all(
-                    16),
-                child: Obx(
-                  ()=> Column(
-                    children: [
+              child: Obx(
+                () => Column(
+                  children: [
+                    _infoTile(
+                      Icons.badge_outlined,
+                      "Student ID",
+                      controller.student.value.id ?? "N/A",
+                    ),
+                    const Divider(height: 16),
+                    _infoTile(
+                      Icons.person_outline_rounded,
+                      "Full Name",
+                      controller.student.value.name ?? "N/A",
+                    ),
+                    const Divider(height: 16),
+                    _infoTile(
+                      Icons.school_outlined,
+                      "Class / Grade",
+                      "Class ${controller.student.value.className ?? 'N/A'}",
+                    ),
+                    const Divider(height: 16),
+                    _infoTile(
+                      Icons.phone_outlined,
+                      "Contact Mobile",
+                      controller.student.value.mobile ?? "N/A",
+                    ),
+                    const Divider(height: 16),
+                    _infoTile(
+                      Icons.email_outlined,
+                      "Email Address",
+                      controller.student.value.email ?? "N/A",
+                    ),
+                    const Divider(height: 16),
+                    _infoTile(
+                      Icons.calendar_month_outlined,
+                      "Registration Date",
+                      controller.student.value.createdAt ?? "N/A",
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-                      _infoTile(
-                        Icons.badge_outlined,
-                        "Student ID",
-                        controller.student.value.id??"",
-                      ),
+            const SizedBox(height: 24),
 
-                      const Divider(),
-
-                      _infoTile(
-                        Icons.person,
-                        "Full Name",
-                        controller.student.value.name??"",
-                      ),
-
-                      const Divider(),
-
-                      _infoTile(
-                        Icons.school,
-                        "Class",
-                        controller.student.value.className??"",
-                      ),
-
-                      const Divider(),
-
-                      _infoTile(
-                        Icons.phone,
-                        "Contact",
-                        controller.student.value.mobile??"",
-                      ),
-
-                      const Divider(),
-
-                      _infoTile(
-                        Icons.email,
-                        "Email",
-                        controller.student.value.email??"",
-                      ),
-
-                      const Divider(),
-
-                      _infoTile(
-                        Icons.calendar_month,
-                        "Admission Date",
-                        controller.student.value.createdAt??"",
-                      ),
-                    ],
+            /// 3. Edit Profile Action Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => Get.toNamed(AppRoutes.editProfile),
+                icon: const Icon(Icons.edit_rounded, size: 20),
+                label: Text(
+                  "Edit Profile",
+                  style: AppTextStyles.button,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
             ),
 
             const SizedBox(height: 20),
-
-            /// Edit Button
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton.icon(
-                onPressed: () => Get.toNamed(AppRoutes.editProfile),
-                icon:
-                const Icon(Icons.edit),
-                label: const Text(
-                  "Edit Profile",
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
           ],
         ),
       ),
@@ -189,58 +199,45 @@ class StudentProfileInfoScreen extends StatelessWidget {
   }
 
   static Widget _infoTile(
-      IconData icon,
-      String title,
-      String value,
-      ) {
-    return ListTile(
-      contentPadding:
-      EdgeInsets.zero,
-      leading: Icon(
-        icon,
-        color: const Color(
-            0xff4A90E2),
-      ),
-      title: Text(title),
-      subtitle: Text(
-        value,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight:
-          FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  static Widget _statCard(
-      String title,
-      String value,
-      Color color,
-      ) {
-    return Container(
-      padding:
-      const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withOpacity(
-            0.1),
-        borderRadius:
-        BorderRadius.circular(
-            15),
-      ),
-      child: Column(
+    IconData icon,
+    String title,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              color: color,
-              fontWeight:
-              FontWeight.bold,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 20,
             ),
           ),
-          const SizedBox(height: 5),
-          Text(title),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.caption,
+                ),
+                Text(
+                  value,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

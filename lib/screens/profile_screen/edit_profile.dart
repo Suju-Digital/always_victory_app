@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:io';
 
 import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
 import '../../controller/profile_controller.dart';
+import '../../helpers/utils.dart';
 
 class EditProfileScreen extends GetView<ProfileController> {
   const EditProfileScreen({super.key});
@@ -11,43 +13,46 @@ class EditProfileScreen extends GetView<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Edit Profile"),
+        title: Text(
+          "Edit Profile",
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () {
+            if (controller.hasUnsavedChanges()) {
+              _showDiscardDialog(context);
+            } else {
+              Get.back();
+            }
+          },
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.appGradient,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () {
-              if (controller.hasUnsavedChanges()) {
-                _showDiscardDialog(context);
-              } else {
-                Get.back();
-              }
-            },
-          ),
-        ],
       ),
       body: Obx(
-            () => SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+        () => SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
           child: Column(
             children: [
-              // Profile Image
+              const SizedBox(height: 10),
+
+              // Profile Image Picker
               Stack(
                 children: [
                   Obx(() {
-                    // Show selected image or existing profile photo
                     if (controller.selectedImage.value != null) {
                       return CircleAvatar(
-                        radius: 60,
+                        radius: 54,
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage: FileImage(
                           controller.selectedImage.value!,
@@ -55,178 +60,117 @@ class EditProfileScreen extends GetView<ProfileController> {
                       );
                     } else if (controller.imagePath.value.isNotEmpty) {
                       return CircleAvatar(
-                        radius: 60,
+                        radius: 54,
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage: NetworkImage(
                           controller.imagePath.value,
                         ),
-                        onBackgroundImageError: (_, __) {
-                          // Fallback if image fails to load
-                        },
                       );
                     } else {
                       return CircleAvatar(
-                        radius: 60,
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
+                        radius: 54,
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                         child: const Icon(
-                          Icons.person,
+                          Icons.person_rounded,
                           color: AppColors.primary,
-                          size: 60,
+                          size: 54,
                         ),
                       );
                     }
                   }),
 
-                  // Edit button
+                  // Camera Edit Badge
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: InkWell(
+                    child: GestureDetector(
                       onTap: controller.pickImage,
                       child: Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
                           color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.camera_alt,
-                          size: 22,
+                          Icons.camera_alt_rounded,
+                          size: 18,
                           color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-
-                  // Remove image button (shown when image is selected)
-                  if (controller.selectedImage.value != null)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: InkWell(
-                        onTap: controller.removeImage,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // Image info text
-              Obx(() {
-                if (controller.selectedImage.value != null) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.green.shade200,
+              // Form Container
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Personal Information", style: AppTextStyles.h4),
+                    const SizedBox(height: 16),
+
+                    // Name Field
+                    TextField(
+                      controller: controller.nameController,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        labelText: "Full Name",
+                        prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primary),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '📸 ${controller.selectedImage.value!.path.split('/').last}',
-                            style: TextStyle(
-                              color: Colors.green.shade700,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+
+                    const SizedBox(height: 16),
+
+                    // Email Field
+                    TextField(
+                      controller: controller.emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        labelText: "Email Address",
+                        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                      ),
                     ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
 
-              const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-              // Name Field
-              TextField(
-                controller: controller.nameController,
-                decoration: InputDecoration(
-                  labelText: "Full Name",
-                  hintText: "Enter your full name",
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
+                    // Contact Field
+                    TextField(
+                      controller: controller.contactController,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        labelText: "Mobile Number",
+                        prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primary),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        counterText: "",
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 15),
-
-              // Email Field
-              TextField(
-                controller: controller.emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  hintText: "Enter your email address",
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // Contact Field
-              TextField(
-                controller: controller.contactController,
-                keyboardType: TextInputType.phone,
-                maxLength: 10,
-                decoration: InputDecoration(
-                  labelText: "Mobile Number",
-                  hintText: "Enter your mobile number",
-                  prefixIcon: const Icon(Icons.phone),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  counterText: "",
-                ),
-              ),
-
-              const SizedBox(height: 30),
+              const SizedBox(height: 28),
 
               // Update Button
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: controller.isLoading.value
                       ? null
@@ -235,51 +179,27 @@ class EditProfileScreen extends GetView<ProfileController> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 4,
+                    elevation: 2,
                   ),
                   child: controller.isLoading.value
-                      ? const CircularProgressIndicator(
-                    color: Colors.white,
-                  )
-                      : const Text(
-                    "UPDATE PROFILE",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "UPDATE PROFILE",
+                          style: AppTextStyles.button,
+                        ),
                 ),
               ),
 
               const SizedBox(height: 12),
-
-              // Reset Button
-              SizedBox(
-                width: double.infinity,
-                height: 45,
-                child: TextButton(
-                  onPressed: controller.hasUnsavedChanges()
-                      ? controller.resetForm
-                      : null,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey.shade600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: const Text(
-                    "RESET TO ORIGINAL",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 8),
 
               // Cancel Button
               SizedBox(
@@ -294,23 +214,22 @@ class EditProfileScreen extends GetView<ProfileController> {
                     }
                   },
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey.shade700,
-                    side: BorderSide(
-                      color: Colors.grey.shade300,
-                    ),
+                    foregroundColor: AppColors.textDark,
+                    side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     "CANCEL",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.button.copyWith(
+                      color: AppColors.textDark,
                     ),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -319,30 +238,16 @@ class EditProfileScreen extends GetView<ProfileController> {
   }
 
   void _showDiscardDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Discard Changes?"),
-        content: const Text(
-          "You have unsaved changes. Are you sure you want to discard them?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text("Keep Editing"),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              Get.back();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text("Discard"),
-          ),
-        ],
-      ),
-    );
+    Utils.showConfirmDialog(
+      title: "Discard Changes?",
+      message: "You have unsaved changes. Are you sure you want to discard them?",
+      confirmText: "Discard",
+      cancelText: "Keep Editing",
+      confirmColor: Colors.red,
+    ).then((confirm) {
+      if (confirm == true) {
+        Get.back();
+      }
+    });
   }
 }

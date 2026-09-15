@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
+import '../../constants/app_text_styles.dart';
 import '../../controller/onboarding_controller.dart';
 
 class OnboardingView extends GetView<OnboardingController> {
@@ -12,7 +13,6 @@ class OnboardingView extends GetView<OnboardingController> {
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
 
-    // Full-screen vibrant slide configurations
     final List<Map<String, dynamic>> slides = [
       {
         'tag': '🎯 DAILY MCQ PRACTICE',
@@ -82,15 +82,15 @@ class OnboardingView extends GetView<OnboardingController> {
                       // Brand Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           gradient: AppColors.appGradient,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(100),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.25),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -99,15 +99,13 @@ class OnboardingView extends GetView<OnboardingController> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('🏆', style: TextStyle(fontSize: 14)),
+                            const Text('🏆', style: TextStyle(fontSize: 12)),
                             const SizedBox(width: 6),
                             Text(
                               'ALWAYS VICTORY',
-                              style: GoogleFonts.outfit(
+                              style: AppTextStyles.labelSmall.copyWith(
                                 color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.0,
+                                letterSpacing: 0.8,
                               ),
                             ),
                           ],
@@ -121,18 +119,18 @@ class OnboardingView extends GetView<OnboardingController> {
                               onTap: controller.skip,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                                  horizontal: 14,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(100),
                                   border: Border.all(
                                     color: Colors.grey.shade200,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.03),
+                                      color: Colors.black.withValues(alpha: 0.03),
                                       blurRadius: 6,
                                     ),
                                   ],
@@ -142,16 +140,14 @@ class OnboardingView extends GetView<OnboardingController> {
                                   children: [
                                     Text(
                                       'Skip',
-                                      style: GoogleFonts.poppins(
+                                      style: AppTextStyles.labelSmall.copyWith(
                                         color: AppColors.textDark,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13,
                                       ),
                                     ),
                                     const SizedBox(width: 4),
                                     const Icon(
                                       Icons.arrow_forward_ios_rounded,
-                                      size: 11,
+                                      size: 10,
                                       color: AppColors.textDark,
                                     ),
                                   ],
@@ -179,22 +175,22 @@ class OnboardingView extends GetView<OnboardingController> {
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          /// HERO EMBLEM CARD (Fills full middle height)
+                          /// HERO EMBLEM CARD
                           Container(
-                            height: size.height * 0.38,
+                            height: size.height * 0.35,
                             width: size.width * 0.85,
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(36),
+                              borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: gradientColors.first.withOpacity(0.18),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 12),
+                                  color: gradientColors.first.withValues(alpha: 0.18),
+                                  blurRadius: 25,
+                                  offset: const Offset(0, 10),
                                 ),
                               ],
                               border: Border.all(
-                                color: gradientColors.first.withOpacity(0.12),
+                                color: gradientColors.first.withValues(alpha: 0.12),
                                 width: 2,
                               ),
                             ),
@@ -203,14 +199,14 @@ class OnboardingView extends GetView<OnboardingController> {
                               children: [
                                 // Glowing Radial Backdrop Circle
                                 Container(
-                                  width: size.width * 0.55,
-                                  height: size.width * 0.55,
+                                  width: size.width * 0.5,
+                                  height: size.width * 0.5,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     gradient: RadialGradient(
                                       colors: [
-                                        gradientColors.first.withOpacity(0.15),
-                                        gradientColors.last.withOpacity(0.02),
+                                        gradientColors.first.withValues(alpha: 0.15),
+                                        gradientColors.last.withValues(alpha: 0.02),
                                       ],
                                     ),
                                   ),
@@ -218,7 +214,7 @@ class OnboardingView extends GetView<OnboardingController> {
 
                                 // Center Emblem Circle
                                 Container(
-                                  padding: const EdgeInsets.all(32),
+                                  padding: const EdgeInsets.all(28),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: gradientColors,
@@ -229,45 +225,42 @@ class OnboardingView extends GetView<OnboardingController> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: gradientColors.first
-                                            .withOpacity(0.4),
-                                        blurRadius: 25,
-                                        offset: const Offset(0, 10),
+                                            .withValues(alpha: 0.35),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
                                       ),
                                     ],
                                   ),
                                   child: Icon(
                                     icon,
-                                    size: size.width * 0.2,
+                                    size: size.width * 0.18,
                                     color: Colors.white,
                                   ),
                                 ),
 
                                 // Floating Top Tag Badge
                                 Positioned(
-                                  top: 18,
+                                  top: 16,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
+                                      horizontal: 14,
+                                      vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(100),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.06),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
+                                          color: Colors.black.withValues(alpha: 0.06),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
                                         ),
                                       ],
                                     ),
                                     child: Text(
                                       tag,
-                                      style: GoogleFonts.poppins(
+                                      style: AppTextStyles.labelSmall.copyWith(
                                         color: gradientColors.first,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.6,
                                       ),
                                     ),
                                   ),
@@ -275,21 +268,21 @@ class OnboardingView extends GetView<OnboardingController> {
 
                                 // Floating Bottom SubTag Badge
                                 Positioned(
-                                  bottom: 18,
+                                  bottom: 16,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
+                                      horizontal: 14,
+                                      vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
                                       color: gradientColors.first,
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(100),
                                       boxShadow: [
                                         BoxShadow(
                                           color: gradientColors.first
-                                              .withOpacity(0.35),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
+                                              .withValues(alpha: 0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
                                         ),
                                       ],
                                     ),
@@ -299,15 +292,13 @@ class OnboardingView extends GetView<OnboardingController> {
                                         const Icon(
                                           Icons.stars_rounded,
                                           color: Colors.white,
-                                          size: 16,
+                                          size: 14,
                                         ),
-                                        const SizedBox(width: 6),
+                                        const SizedBox(width: 4),
                                         Text(
                                           subTag,
-                                          style: GoogleFonts.poppins(
+                                          style: AppTextStyles.labelSmall.copyWith(
                                             color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
@@ -328,25 +319,20 @@ class OnboardingView extends GetView<OnboardingController> {
                                   textAlign: TextAlign.center,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w900,
+                                  style: AppTextStyles.h2.copyWith(
                                     color: AppColors.textDark,
                                     height: 1.2,
-                                    letterSpacing: -0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
                                 Text(
                                   slide['subtitle'] as String,
                                   textAlign: TextAlign.center,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.grey.shade700,
                                     height: 1.5,
-                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
@@ -360,7 +346,7 @@ class OnboardingView extends GetView<OnboardingController> {
 
                 /// 3. BOTTOM FOOTER CONTROLS
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: Column(
                     children: [
                       /// Indicator Dots
@@ -374,8 +360,8 @@ class OnboardingView extends GetView<OnboardingController> {
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: isActive ? 36 : 9,
-                              height: 9,
+                              width: isActive ? 32 : 8,
+                              height: 8,
                               decoration: BoxDecoration(
                                 color: isActive
                                     ? AppColors.primary
@@ -385,8 +371,8 @@ class OnboardingView extends GetView<OnboardingController> {
                                     ? [
                                         BoxShadow(
                                           color: AppColors.primary
-                                              .withOpacity(0.4),
-                                          blurRadius: 8,
+                                              .withValues(alpha: 0.35),
+                                          blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),
                                       ]
@@ -397,21 +383,21 @@ class OnboardingView extends GetView<OnboardingController> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       /// Main Action Button
                       SizedBox(
                         width: double.infinity,
-                        height: 60,
+                        height: 52,
                         child: ElevatedButton(
                           onPressed: controller.next,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            elevation: 8,
-                            shadowColor: AppColors.primary.withOpacity(0.45),
+                            elevation: 4,
+                            shadowColor: AppColors.primary.withValues(alpha: 0.4),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: Row(
@@ -419,18 +405,14 @@ class OnboardingView extends GetView<OnboardingController> {
                             children: [
                               Text(
                                 controller.isLast ? "GET STARTED" : "CONTINUE",
-                                style: GoogleFonts.outfit(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.0,
-                                ),
+                                style: AppTextStyles.button,
                               ),
                               const SizedBox(width: 8),
                               Icon(
                                 controller.isLast
                                     ? Icons.rocket_launch_rounded
                                     : Icons.arrow_forward_rounded,
-                                size: 22,
+                                size: 20,
                               ),
                             ],
                           ),

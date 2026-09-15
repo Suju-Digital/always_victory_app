@@ -1,4 +1,6 @@
 import 'package:always_victory/constants/app_colors.dart';
+import 'package:always_victory/constants/app_constants.dart';
+import 'package:always_victory/constants/app_text_styles.dart';
 import 'package:always_victory/controller/auth_controller.dart';
 import 'package:always_victory/controller/days_controller.dart';
 import 'package:always_victory/helpers/local_storage.dart';
@@ -20,199 +22,217 @@ class ProfileScreen extends StatelessWidget {
     final dayController = Get.find<DayController>();
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
-
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: Text(
+          "My Profile & Settings",
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.appGradient,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(AppConstants.paddingMD),
           child: Column(
             children: [
-
-              /// Header
+              /// 1. USER PROFILE CARD
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20),
                   gradient: AppColors.appGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
-
                     Obx(() {
                       final student = controller.student.value;
-                      print("${AppConfig.imageBaseUrl}${student.photo??""}");
                       return CircleAvatar(
-
-                        radius: 50,
+                        radius: 42,
                         backgroundColor: Colors.white,
-                        backgroundImage:
-                        student.photo != null &&
-                            student.photo!.isNotEmpty
-                            ? NetworkImage("${AppConfig.studentProfileImageBaseUrl}${student.photo??""}")
+                        backgroundImage: student.photo != null &&
+                                student.photo!.isNotEmpty
+                            ? NetworkImage(
+                                "${AppConfig.studentProfileImageBaseUrl}${student.photo}")
                             : null,
-                        child:
-                        student.photo == null ||
-                            student.photo!.isEmpty
+                        child: student.photo == null || student.photo!.isEmpty
                             ? const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: AppColors.primary,
-                        )
+                                Icons.person_rounded,
+                                size: 48,
+                                color: AppColors.primary,
+                              )
                             : null,
                       );
                     }),
-
                     const SizedBox(height: 12),
-
                     Obx(
-                      ()=>  Text(
-                        controller.student.value.name??"No Name",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight:
-                          FontWeight.bold,
+                      () => Text(
+                        controller.student.value.name ?? "Student",
+                        style: AppTextStyles.h3.copyWith(
                           color: Colors.white,
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 5),
-
-                     Obx(
-                       ()=> Text(
-                        "Class ${controller.student.value.className??""}",
-                        style: const TextStyle(
-                          color: Colors.white70,
+                    const SizedBox(height: 4),
+                    Obx(
+                      () => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
                         ),
-                                           ),
-                     ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "Class ${controller.student.value.className ?? ''}",
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              /// Student Section
-              _sectionTitle("Student"),
+              /// 2. STUDENT SECTION
+              _sectionTitle("Student Details"),
 
               _menuTile(
-                Icons.person_outline,
-                "My Profile",
-                    () =>Get.toNamed(AppRoutes.profileInfo),
+                Icons.person_outline_rounded,
+                "My Profile Info",
+                () => Get.toNamed(AppRoutes.profileInfo),
               ),
 
+              const SizedBox(height: 16),
 
-              const SizedBox(height: 15),
-
-              /// App Section
+              /// 3. APP SECTION
               _sectionTitle("Application"),
-
 
               _menuTile(
                 Icons.business_outlined,
                 "About Company",
-                    () =>Get.toNamed(AppRoutes.aboutCompany),
+                () => Get.toNamed(AppRoutes.aboutCompany),
               ),
 
               _menuTile(
                 Icons.privacy_tip_outlined,
                 "Privacy Policy",
-                    () =>Get.toNamed(AppRoutes.privacyPolicy),
+                () => Get.toNamed(AppRoutes.privacyPolicy),
               ),
 
               _menuTile(
                 Icons.description_outlined,
                 "Terms & Conditions",
-                    () =>Get.toNamed(AppRoutes.termsCondition),
+                () => Get.toNamed(AppRoutes.termsCondition),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
 
-              /// Support
-              _sectionTitle("Support"),
+              /// 4. SUPPORT & SHARING
+              _sectionTitle("Support & Share"),
 
               _menuTile(
                 Icons.call_outlined,
                 "Contact Us",
-                    ()=>Get.toNamed(AppRoutes.contactUs),
+                () => Get.toNamed(AppRoutes.contactUs),
               ),
 
               _menuTile(
-                Icons.star_outline_rounded,
+                Icons.rate_review_outlined,
                 "Write a Review",
                 () => ReviewDialog.show(context),
               ),
 
               _menuTile(
                 Icons.share_outlined,
-                "Share App",
+                "Share App With Friends 🚀",
                 () {
-                  Share.share(
-                    "Download Always Victory App:\nhttps://play.google.com/store/apps/details?id=com.alwaysvictory.app",
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: "🚀 Download Always Victory App for Nursery to 12th MCQ Practice & Study Guides:\n${AppConfig.playStoreUrl}",
+                    ),
                   );
                 },
               ),
 
+              const SizedBox(height: 24),
 
-
-              const SizedBox(height: 25),
-
-              /// Logout
+              /// 5. LOGOUT BUTTON
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 50,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-
-                    Get.defaultDialog(
-                      title: "Logout",
-                      middleText:
-                      "Are you sure you want to logout?",
-                      textConfirm: "Yes",
-                      textCancel: "No",
-                      onConfirm: () async{
-                        Get.back();
-                       Utils.showLoading(message: "Loging Out....");
-                          await  LocalStorage.clear();
-                          Utils.hide();
-                        Get.offAllNamed(
-                          AppRoutes.login,
-                        );
-                      },
+                  onPressed: () async {
+                    final confirm = await Utils.showConfirmDialog(
+                      title: "Logout Account",
+                      message: "Are you sure you want to log out?",
+                      confirmText: "Logout",
+                      cancelText: "Cancel",
+                      confirmColor: Colors.red,
                     );
+
+                    if (confirm == true) {
+                      Utils.showLoading(message: "Logging Out...");
+                      await LocalStorage.clear();
+                      Utils.hide();
+                      Get.offAllNamed(AppRoutes.login);
+                    }
                   },
-                  icon: const Icon(Icons.logout),
-                  label: const Text(
-                    "Logout",
+                  icon: const Icon(Icons.logout_rounded, size: 20),
+                  label: Text(
+                    "LOGOUT",
+                    style: AppTextStyles.button.copyWith(color: Colors.white),
                   ),
-                  style:
-                  ElevatedButton.styleFrom(
-                    backgroundColor:
-                    Colors.red,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              Text(
-                dayController.aboutData.value?.appName??"",
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.bold,
+              // Version Info
+              Obx(
+                () => Text(
+                  dayController.aboutData.value?.appName ?? AppConfig.appName,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Obx(
+                () => Text(
+                  "Version ${dayController.aboutData.value?.appVersion ?? AppConfig.appVersion}",
+                  style: AppTextStyles.bodySmall,
                 ),
               ),
 
-              const SizedBox(height: 5),
-
-              Text(
-                "Version ${dayController.aboutData.value?.appVersion??""}",
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -224,13 +244,12 @@ class ProfileScreen extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding:
-        const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 8, left: 4),
         child: Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+          style: AppTextStyles.h4.copyWith(
+            fontSize: 15,
+            color: AppColors.textDark,
           ),
         ),
       ),
@@ -238,27 +257,34 @@ class ProfileScreen extends StatelessWidget {
   }
 
   static Widget _menuTile(
-      IconData icon,
-      String title,
-      VoidCallback onTap,
-      ) {
-    return Card(
-      elevation: 0,
-      margin:
-      const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(
-        borderRadius:
-        BorderRadius.circular(15),
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: ListTile(
         leading: Icon(
           icon,
           color: AppColors.primary,
+          size: 22,
         ),
-        title: Text(title),
+        title: Text(
+          title,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
         trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: AppColors.textGrey,
         ),
         onTap: onTap,
       ),

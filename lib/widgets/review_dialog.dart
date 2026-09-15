@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../constants/app_colors.dart';
 import '../controller/class_controller.dart';
+import '../helpers/utils.dart';
 
 class ReviewDialog extends StatefulWidget {
   const ReviewDialog({super.key});
@@ -31,7 +32,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
     final studentId = int.tryParse(authController.student.value.id ?? '0') ?? 0;
 
     if (studentId == 0) {
-      Get.snackbar("Error", "Please login to submit feedback");
+      Utils.showError("Please login to submit feedback");
       return;
     }
 
@@ -53,12 +54,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
       Get.back();
       _showSuccessPopup();
     } else {
-      Get.snackbar(
-        "Oops!", 
-        "Something went wrong while submitting your review.",
-        backgroundColor: AppColors.wrong.withOpacity(0.1),
-        colorText: AppColors.wrong,
-      );
+      Utils.showError("Something went wrong while submitting your review.");
     }
   }
 
@@ -139,7 +135,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary.withOpacity(0.1), AppColors.accent.withOpacity(0.1)],
+                    colors: [AppColors.primary.withOpacity(0.1), AppColors.accentIndigo.withOpacity(0.1)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
