@@ -176,6 +176,96 @@ class ApiServices {
     }
   }
 
+  static Future<Map<String, dynamic>> createOrder({
+    required int studentId,
+    required int classId,
+    required double amount,
+  }) async {
+    final response = await ApiHelper.post(
+      "create_order.php",
+      body: {
+        "student_id": studentId,
+        "class_id": classId,
+        "amount": amount,
+      },
+    );
+    return Map<String, dynamic>.from(response);
+  }
+
+  static Future<Map<String, dynamic>> createQrPayment({
+    required int studentId,
+    required int classId,
+    required double amount,
+    String type = 'course',
+  }) async {
+    final response = await ApiHelper.post(
+      "create_qr.php",
+      body: {
+        "user_id": studentId,
+        "student_id": studentId,
+        "product_id": classId,
+        "class_id": classId,
+        "amount": amount,
+        "type": type,
+      },
+    );
+    return Map<String, dynamic>.from(response);
+  }
+
+  static Future<bool> checkPaymentStatus({
+    String? qrId,
+    int? studentId,
+    int? classId,
+    String type = 'course',
+  }) async {
+    final response = await ApiHelper.post(
+      "check_payment_status.php",
+      body: {
+        if (qrId != null) "qr_id": qrId,
+        if (studentId != null) "student_id": studentId,
+        if (classId != null) "class_id": classId,
+        "type": type,
+      },
+    );
+    return response['status'] == true ||
+        response['success'] == true ||
+        response['payment_status'] == 'success';
+  }
+
+  static Future<bool> recordEbookPaymentSuccess({
+    required int studentId,
+    required int ebookId,
+    required double amount,
+    required String paymentId,
+  }) async {
+    final response = await ApiHelper.post(
+      "ebook_purchase.php",
+      body: {
+        "student_id": studentId,
+        "ebook_id": ebookId,
+        "amount": amount,
+        "transaction_id": paymentId,
+      },
+    );
+    return response['status'] == true;
+  }
+
+  static Future<bool> verifyPaymentServerSide({
+    required String orderId,
+    required String paymentId,
+    required String signature,
+  }) async {
+    final response = await ApiHelper.post(
+      "verify_payment.php",
+      body: {
+        "order_id": orderId,
+        "payment_id": paymentId,
+        "signature": signature,
+      },
+    );
+    return response['status'] == true;
+  }
+
   static Future<bool> submitAnswer({
     required int studentId,
     required int courseId,

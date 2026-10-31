@@ -22,4 +22,14 @@ class CarouselModel {
       status: int.tryParse(json['status'].toString()) ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'image': imageUrl,
+      'status': status,
+    };
+  }
 }

@@ -2,7 +2,7 @@ class AppStrings {
   // App
   static const String appName         = 'Always Victory';
   static const String appTagline      = 'Crack Any Exam with Confidence';
-  static const String razorPayApiKey  = 'rzp_live_TLaEHwLVTknVrk';
+  static const String razorPayApiKey  = 'rzp_live_Tkypg6fD1HepzU';
 
 
   // Splash

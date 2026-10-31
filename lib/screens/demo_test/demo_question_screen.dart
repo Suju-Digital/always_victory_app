@@ -48,7 +48,8 @@ class DemoQuestionScreen extends StatelessWidget {
 
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 400),
-            child: Padding(
+            child: SafeArea(
+              child: Padding(
               key: ValueKey(controller.index.value),
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -135,7 +136,8 @@ class DemoQuestionScreen extends StatelessWidget {
                 ],
               ),
             ),
-          );
+          ),
+        );
         }),
       ),
     );

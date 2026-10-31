@@ -76,7 +76,7 @@ class AllClassesScreen extends StatelessWidget {
                 ? classController.questionProgress[i]
                 : null;
             final totalStudents = classController.enrollmentCounts[c.id] ?? 0;
-            final isPurchased = classController.purchaseClass[c.id] ?? true;
+            final isPurchased = classController.purchaseClass[c.id] ?? false;
             final isLocked = !isPurchased;
 
             return ClassCard(

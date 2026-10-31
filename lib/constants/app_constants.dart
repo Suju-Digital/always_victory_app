@@ -18,7 +18,7 @@ class AppConstants {
   static const double averageThreshold    = 40.0;
 
   // Animation Durations (ms)
-  static const int splashDuration         = 2500;
+  static const int splashDuration         = 1200;
   static const int pageTransitionDuration = 300;
   static const int optionAnimDuration     = 200;
   static const int timerWarningAt         = 10;   // seconds remaining

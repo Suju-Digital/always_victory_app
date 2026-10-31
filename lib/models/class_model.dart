@@ -53,4 +53,22 @@ class ClassModel {
           double.tryParse(json['final_price']?.toString() ?? '0') ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'class_name': className,
+      'title': title,
+      'description': description,
+      'poster_image': posterImage,
+      'created_at': createdAt,
+      'expiry_date': expiryDate,
+      'offer_hours': offerHours,
+      'enrollStudent': enrollStudent,
+      'price': price,
+      'original_price': originalPrice,
+      'discount_percent': discountPercent,
+      'final_price': finalPrice,
+    };
+  }
 }

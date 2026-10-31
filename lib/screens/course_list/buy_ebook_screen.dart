@@ -3,9 +3,15 @@ import 'package:get/get.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
+import '../../controller/class_controller.dart';
 import '../../controller/ebook_purchase_controller.dart';
 import '../../data/app_config/app_config.dart';
+import '../../helpers/local_storage.dart';
+import '../../helpers/utils.dart';
 import '../../models/ebook_model.dart';
+import '../../models/student_model.dart';
+import '../../widgets/app_cached_image.dart';
+import '../../widgets/qr_payment_dialog.dart';
 
 class BuyEbookScreen extends StatelessWidget {
   final EbookModel ebook;
@@ -64,59 +70,14 @@ class BuyEbookScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: ClipRRect(
+                  child: AppCachedImage(
+                    imageUrl: AppConfig.getEbookThumbnailUrl(ebook.thumbnail),
+                    width: double.infinity,
+                    height: 260,
+                    fit: BoxFit.contain,
                     borderRadius: BorderRadius.circular(20),
-                    child: Image.network(
-                      AppConfig.getEbookThumbnailUrl(ebook.thumbnail),
-                      width: double.infinity,
-                      height: 260,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Image.network(
-                          AppConfig.getImageUrl(
-                            AppConfig.studentImageBaseUrl,
-                            ebook.thumbnail,
-                          ),
-                          width: double.infinity,
-                          height: 260,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context2, error2, stack2) {
-                            return Image.network(
-                              AppConfig.getImageUrl(
-                                AppConfig.imageBaseUrl,
-                                ebook.thumbnail,
-                              ),
-                              width: double.infinity,
-                              height: 260,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: AppColors.primary
-                                    .withValues(alpha: 0.08),
-                                child: const Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.menu_book_rounded,
-                                      color: AppColors.primary,
-                                      size: 60,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      "E-BOOK COVER",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                    memCacheWidth: 800,
+                    fallbackIcon: Icons.menu_book_rounded,
                   ),
                 ),
 
@@ -268,7 +229,35 @@ class BuyEbookScreen extends StatelessWidget {
                       height: 48,
                       width: 160,
                       child: ElevatedButton.icon(
-                        onPressed: controller.startPayment,
+                        onPressed: () async {
+                          final studentJson = await LocalStorage.getStudent();
+                          if (studentJson != null) {
+                            final student = StudentModel.fromJson(studentJson);
+                            final result = await showDialog<bool>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => QRPaymentDialog.forEbook(
+                                ebook: ebook,
+                                student: student,
+                              ),
+                            );
+                            if (result == true) {
+                              final classController =
+                                  Get.find<ClassController>();
+                              classController.purchasedBooks[ebook.id] = true;
+                              classController.purchasedBooks.refresh();
+                              await classController.loadPurchasedBooks();
+                              Utils.showSuccess(
+                                "Book Purchased Successfully 📚🎉",
+                              );
+                              if (context.mounted) {
+                                Navigator.of(context).pop(true);
+                              }
+                            }
+                          } else {
+                            Utils.showError("Please login to continue");
+                          }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,

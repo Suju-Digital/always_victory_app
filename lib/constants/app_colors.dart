@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand Primary
-  static const Color primary        = Color(0xFFFF5252); // Energetic Red/Coral (Primary Brand)
+  static const Color primary        = Color(0xFFFF5722); // Vibrant Deep Orange-Red (Primary Brand Theme)
   static const Color primaryLight   = Color(0xFFFF7A00); // Warm Orange for Gradients
-  static const Color primaryDark    = Color(0xFFE53935); // Deep Red for active states
+  static const Color primaryDark    = Color(0xFFE64A19); // Deep Red-Orange for active states
 
   static const Gradient appGradient = LinearGradient(
     colors: [
-      Color(0xFFFF5252), // primary
+      Color(0xFFFF5722), // primary
       Color(0xFFFF7A00), // primaryLight
     ],
     begin: Alignment.topLeft,

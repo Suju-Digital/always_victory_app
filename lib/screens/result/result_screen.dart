@@ -45,11 +45,11 @@ class _ResultScreenState extends State<ResultScreen> {
 
       String msg = "";
       if (percent >= 80) {
-        msg = "वाह! आप एक सुपरस्टार हैं! आपको $score में से $total मिले। आपके लिए पाँच सितारे!";
+        msg = "Wow! You are a superstar! You scored $score out of $total. Five stars for you!";
       } else if (percent >= 50) {
-        msg = "बहुत अच्छा प्रयास! आपको $score सही उत्तर मिले। आगे बढ़ते रहें!";
+        msg = "Great effort! You got $score correct answers. Keep going!";
       } else {
-        msg = "अच्छा प्रयास! आइए फिर से अभ्यास करें और मास्टर बनें!";
+        msg = "Good try! Let's practice again and master this!";
       }
       await VoiceHelper.speak(msg);
     } catch (e) {

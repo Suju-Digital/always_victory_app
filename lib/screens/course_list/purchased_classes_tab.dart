@@ -9,6 +9,7 @@ import '../../controller/days_controller.dart';
 import '../../data/app_config/app_config.dart';
 import '../../helpers/utils.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/app_cached_image.dart';
 
 class PurchasedClassesTab extends StatelessWidget {
   PurchasedClassesTab({super.key});
@@ -111,24 +112,15 @@ class PurchasedClassesTab extends StatelessWidget {
                   child: Row(
                     children: [
                       // Course Poster Frame
-                      ClipRRect(
+                      AppCachedImage(
+                        imageUrl: "${AppConfig.studentImageBaseUrl}${c.posterImage}",
+                        width: 85,
+                        height: 85,
+                        fit: BoxFit.cover,
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          "${AppConfig.studentImageBaseUrl}${c.posterImage}",
-                          width: 85,
-                          height: 85,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 85,
-                            height: 85,
-                            color: AppColors.primary.withValues(alpha: 0.08),
-                            child: const Icon(
-                              Icons.school_rounded,
-                              color: AppColors.primary,
-                              size: 32,
-                            ),
-                          ),
-                        ),
+                        memCacheWidth: 170,
+                        memCacheHeight: 170,
+                        fallbackIcon: Icons.school_rounded,
                       ),
 
                       const SizedBox(width: 12),

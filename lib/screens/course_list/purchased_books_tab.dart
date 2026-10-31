@@ -6,6 +6,7 @@ import '../../constants/app_constants.dart';
 import '../../constants/app_text_styles.dart';
 import '../../controller/class_controller.dart';
 import '../../data/app_config/app_config.dart';
+import '../../widgets/app_cached_image.dart';
 import 'buy_ebook_screen.dart';
 import 'ebook_reader.dart';
 
@@ -92,26 +93,17 @@ class PurchasedBooksTab extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  ClipRRect(
+                  AppCachedImage(
+                    imageUrl: AppConfig.getEbookThumbnailUrl(ebook.thumbnail),
+                    width: 90,
+                    height: 120,
+                    fit: BoxFit.cover,
                     borderRadius: const BorderRadius.horizontal(
                       left: Radius.circular(16),
                     ),
-                    child: Image.network(
-                      AppConfig.getEbookThumbnailUrl(ebook.thumbnail),
-                      width: 90,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 90,
-                        height: 120,
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        child: const Icon(
-                          Icons.menu_book_rounded,
-                          size: 36,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
+                    memCacheWidth: 180,
+                    memCacheHeight: 240,
+                    fallbackIcon: Icons.menu_book_rounded,
                   ),
                   Expanded(
                     child: Padding(

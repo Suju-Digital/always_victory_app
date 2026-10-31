@@ -5,8 +5,14 @@ import 'package:get/get.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
 import '../../controller/buy_course_controller.dart';
+import '../../controller/class_controller.dart';
 import '../../data/app_config/app_config.dart';
+import '../../helpers/local_storage.dart';
+import '../../helpers/utils.dart';
 import '../../models/class_model.dart';
+import '../../models/student_model.dart';
+import '../../widgets/app_cached_image.dart';
+import '../../widgets/qr_payment_dialog.dart';
 
 class BuyClassScreen extends StatefulWidget {
   const BuyClassScreen({super.key});
@@ -162,47 +168,14 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                         ),
                       ],
                     ),
-                    child: ClipRRect(
+                    child: AppCachedImage(
+                      imageUrl: AppConfig.getClassPosterUrl(item.posterImage),
+                      width: double.infinity,
+                      height: 260,
+                      fit: BoxFit.contain,
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.network(
-                        AppConfig.getClassPosterUrl(item.posterImage),
-                        width: double.infinity,
-                        height: 260,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Image.network(
-                            AppConfig.getImageUrl(
-                              AppConfig.imageBaseUrl,
-                              item.posterImage,
-                            ),
-                            width: double.infinity,
-                            height: 260,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.school_rounded,
-                                    color: AppColors.primary,
-                                    size: 60,
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    "COURSE POSTER",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                      memCacheWidth: 800,
+                      fallbackIcon: Icons.school_rounded,
                     ),
                   ),
 
@@ -420,19 +393,42 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
 
                             const SizedBox(width: 12),
 
-                            // Enroll Now Button
+                            // Enroll Now Button (Opens QR Payment Modal)
                             ElevatedButton(
-                              onPressed: controller.startPayment,
+                              onPressed: () async {
+                                final studentJson = await LocalStorage.getStudent();
+                                if (studentJson != null) {
+                                  final student = StudentModel.fromJson(studentJson);
+                                  final result = await showDialog<bool>(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => QRPaymentDialog(
+                                      course: item,
+                                      student: student,
+                                    ),
+                                  );
+                                  if (result == true) {
+                                    final classController = Get.find<ClassController>();
+                                    classController.purchaseClass[item.id] = true;
+                                    classController.purchaseClass.refresh();
+                                    classController.loadPurchaseClass(); // background refresh
+                                    Utils.showSuccess("Course Purchased Successfully 🎉");
+                                    if (context.mounted) Navigator.of(context).pop(true);
+                                  }
+                                } else {
+                                  Utils.showError("Please login to continue");
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFFFF5227),
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
+                                  horizontal: 22,
                                   vertical: 12,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               child: Text(
@@ -440,6 +436,7 @@ class _BuyClassScreenState extends State<BuyClassScreen> {
                                 style: AppTextStyles.button.copyWith(
                                   color: const Color(0xFFFF5227),
                                   fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),

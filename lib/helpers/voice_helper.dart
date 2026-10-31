@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -10,9 +9,9 @@ class VoiceHelper {
     if (_isInitialized) return;
     
     try {
-      // Try Hindi first, then fallbacks
-      List<String> langs = ["hi-IN", "en-IN", "en-US"];
-      String selectedLang = "hi-IN";
+      // Set to Indian English by default
+      List<String> langs = ["en-IN", "en-US", "hi-IN"];
+      String selectedLang = "en-IN";
       
       for (var lang in langs) {
         if (await _flutterTts.isLanguageAvailable(lang) as bool) {

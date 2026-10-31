@@ -18,9 +18,12 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/app_text_styles.dart';
 import '../../controller/auth_controller.dart';
+import '../../controller/bottom_navigation_controller.dart';
 import '../../controller/class_controller.dart';
 import '../../controller/progress_controller.dart';
 import '../../models/class_model.dart';
+import '../../widgets/announcement_dialog.dart';
+import '../../widgets/app_cached_image.dart';
 import '../../widgets/carousel.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -32,13 +35,20 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
+    // Trigger promotional/announcement popup once per session after view renders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnnouncementDialog.checkAndShow();
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: Colors.white,
         onRefresh: () async {
-          classController.isLoading.value = true;
+          if (classController.classes.isEmpty) {
+            classController.isLoading.value = true;
+          }
           final progressController = Get.isRegistered<ProgressController>()
               ? Get.find<ProgressController>()
               : Get.put(ProgressController());
@@ -217,84 +227,106 @@ class HomeScreen extends StatelessWidget {
 
               /// 2. FEATURED BANNER CAROUSEL
               SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 14),
-                  child: AppCarousel(
-                    items: classController.carousal,
-                    height: 155,
-                    autoPlay: true,
-                    itemBuilder: (item, index) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                child: Obx(() {
+                  if (classController.carousal.isEmpty) return const SizedBox.shrink();
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(top: 14),
+                    child: AppCarousel(
+                      items: classController.carousal,
+                      height: 155,
+                      autoPlay: true,
+                      itemBuilder: (item, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            AnnouncementDialog.show(carouselItem: item);
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.network(
-                            "${AppConfig.carsouleImageBaseUrl}${item.imageUrl}",
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey.shade100,
+                            child: AppCachedImage(
+                              imageUrl: "${AppConfig.carsouleImageBaseUrl}${item.imageUrl}",
+                              fit: BoxFit.fill,
                               width: double.infinity,
-                              child: const Icon(
-                                Icons.school_rounded,
-                                color: AppColors.primary,
-                                size: 36,
-                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              memCacheWidth: 800,
+                              fallbackIcon: Icons.school_rounded,
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                        );
+                      },
+                    ),
+                  );
+                }),
               ),
 
-              /// 3. COMPACT QUICK NAVIGATION MENU
+              /// 3. COMPACT QUICK NAVIGATION MENU (4 DISTINCT ACTION CARDS)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildQuickNavItem(
-                        icon: Icons.play_circle_fill_rounded,
-                        label: 'Practice',
-                        color: AppColors.primary,
+                      // 1. Daily Practice Card (Coral/Orange)
+                      _buildQuickActionCard(
+                        icon: Icons.edit_note_rounded,
+                        title: 'Daily\nPractice',
+                        color: const Color(0xFFFF5722),
+                        lightColor: const Color(0xFFFFECEB),
                         onTap: () {
                           if (classController.classes.isNotEmpty) {
                             final first = classController.classes.first;
                             DayController.instance.getDays(classId: first.id);
                             Get.toNamed(AppRoutes.days, arguments: first);
+                          } else {
+                            Get.to(() => const AllClassesScreen());
                           }
                         },
                       ),
-                      _buildQuickNavItem(
+
+                      // 2. Study E-Books Card (Teal/Emerald)
+                      _buildQuickActionCard(
+                        icon: Icons.menu_book_rounded,
+                        title: 'Study\nE-Books',
+                        color: const Color(0xFF00BFA5),
+                        lightColor: const Color(0xFFE0F7F4),
+                        onTap: () {
+                          final bottomNav =
+                              Get.isRegistered<BottomNavController>()
+                                  ? Get.find<BottomNavController>()
+                                  : null;
+                          if (bottomNav != null) {
+                            bottomNav.changeTab(1);
+                          } else {
+                            Get.toNamed(AppRoutes.courses);
+                          }
+                        },
+                      ),
+
+                      // 3. Progress Report Card (Blue)
+                      _buildQuickActionCard(
                         icon: Icons.bar_chart_rounded,
-                        label: 'Progress',
+                        title: 'Progress\nReport',
                         color: const Color(0xFF3B82F6),
+                        lightColor: const Color(0xFFEFF6FF),
                         onTap: () => Get.toNamed(AppRoutes.progress),
                       ),
-                      _buildQuickNavItem(
-                        icon: Icons.menu_book_rounded,
-                        label: 'My Classes',
-                        color: const Color(0xFF10B981),
+
+                      // 4. My Learning Card (Purple/Violet)
+                      _buildQuickActionCard(
+                        icon: Icons.school_rounded,
+                        title: 'My\nLearning',
+                        color: const Color(0xFF8B5CF6),
+                        lightColor: const Color(0xFFF5F3FF),
                         onTap: () => Get.toNamed(AppRoutes.courses),
-                      ),
-                      _buildQuickNavItem(
-                        icon: Icons.person_rounded,
-                        label: 'Profile',
-                        color: const Color(0xFFEC4899),
-                        onTap: () => Get.toNamed(AppRoutes.profile),
                       ),
                     ],
                   ),
@@ -304,15 +336,15 @@ class HomeScreen extends StatelessWidget {
               /// 4. SECTION TITLE
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                   child: Row(
                     children: [
                       Text(
-                        "Select Your Class",
+                        "Select Your Class 🏫",
                         style: GoogleFonts.poppins(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          color: const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
                         ),
                       ),
                       const Spacer(),
@@ -320,18 +352,19 @@ class HomeScreen extends StatelessWidget {
                         onTap: () => Get.to(() => const AllClassesScreen()),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5,
+                            horizontal: 14,
+                            vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            color: const Color(0xFFFFECEB),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
                             "See All",
-                            style: AppTextStyles.labelSmall.copyWith(
+                            style: GoogleFonts.poppins(
                               color: AppColors.primary,
-                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -412,7 +445,7 @@ class HomeScreen extends StatelessWidget {
                         final totalStudents =
                             classController.enrollmentCounts[c.id] ?? 0;
                         final isPurchased =
-                            classController.purchaseClass[c.id] ?? true;
+                            classController.purchaseClass[c.id] ?? false;
                         final isLocked = !isPurchased;
 
                         return ClassCard(
@@ -528,27 +561,17 @@ class HomeScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Book Cover Thumbnail
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        AppConfig.getEbookThumbnailUrl(
-                                          ebook.thumbnail,
-                                        ),
-                                        height: 95,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          height: 95,
-                                          width: double.infinity,
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.08),
-                                          child: const Icon(
-                                            Icons.menu_book_rounded,
-                                            color: AppColors.primary,
-                                            size: 32,
-                                          ),
-                                        ),
+                                    AppCachedImage(
+                                      imageUrl: AppConfig.getEbookThumbnailUrl(
+                                        ebook.thumbnail,
                                       ),
+                                      height: 95,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      borderRadius: BorderRadius.circular(10),
+                                      memCacheWidth: 280,
+                                      memCacheHeight: 190,
+                                      fallbackIcon: Icons.menu_book_rounded,
                                     ),
                                     const SizedBox(height: 8),
                                     // Title
@@ -747,38 +770,68 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickNavItem({
+  Widget _buildQuickActionCard({
     required IconData icon,
-    required String label,
+    required String title,
     required Color color,
+    required Color lightColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
               color: color,
-              size: 22,
+              width: 1.6,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Circular Pastel Icon Container
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: lightColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Two-line Bold Title
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                  height: 1.25,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

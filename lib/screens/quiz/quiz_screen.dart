@@ -160,9 +160,10 @@ class _QuizScreenState extends State<QuizScreen> {
             }
           }
 
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
               children: [
                 // 🔥 Progress Row with visibility-aware scroll
                 SizedBox(
@@ -613,7 +614,8 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
               ],
             ),
-          );
+          ),
+        );
         }),
       ),
     );

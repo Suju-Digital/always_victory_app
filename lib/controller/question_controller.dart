@@ -12,6 +12,7 @@ import '../data/api_helper/api_helper.dart';
 import '../models/answer_model.dart';
 import '../models/question_model.dart';
 import 'class_controller.dart';
+import 'days_controller.dart';
 
 class QuestionController extends GetxController {
 // static QuestionController get instance=> Get.find();
@@ -589,6 +590,16 @@ class QuestionController extends GetxController {
       question.classId ?? 0,
       question.dayId ?? 0,
     );
+
+    if (question.classId != null && question.dayId != null) {
+      if (Get.isRegistered<DayController>()) {
+        await DayController.instance.markDayCompleted(
+          question.classId!,
+          question.dayId!,
+        );
+      }
+    }
+
     await ClassController.instance.getAllClassesProgress();
     Get.offNamed(
       AppRoutes.result,

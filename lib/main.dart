@@ -1,12 +1,14 @@
 import 'package:always_victory/data/global_controller_binding/global_binding.dart';
+import 'package:always_victory/helpers/local_storage.dart';
 import 'package:always_victory/routes/app_pages.dart';
 import 'package:always_victory/routes/app_routes.dart';
 import 'package:always_victory/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalStorage.init();
   AppBindings.init();
   runApp(const MCQApp());
 }

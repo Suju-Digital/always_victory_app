@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../models/class_model.dart';
+import 'app_cached_image.dart';
 
 class ClassCard extends StatelessWidget {
   final ClassModel data;
@@ -50,24 +51,15 @@ class ClassCard extends StatelessWidget {
               /// 🖼️ Compact Thumbnail Image
               Stack(
                 children: [
-                  ClipRRect(
+                  AppCachedImage(
+                    imageUrl: "${AppConfig.studentImageBaseUrl}${data.posterImage}",
+                    height: 80,
+                    width: 85,
+                    fit: BoxFit.cover,
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      "${AppConfig.studentImageBaseUrl}${data.posterImage}",
-                      height: 80,
-                      width: 85,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        height: 80,
-                        width: 85,
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        child: const Icon(
-                          Icons.school_rounded,
-                          color: AppColors.primary,
-                          size: 32,
-                        ),
-                      ),
-                    ),
+                    memCacheHeight: 160,
+                    memCacheWidth: 170,
+                    fallbackIcon: Icons.school_rounded,
                   ),
                   if (isLocked)
                     Positioned.fill(
